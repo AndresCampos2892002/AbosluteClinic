@@ -1,0 +1,257 @@
+<div class="login-page">
+  <div class="bg-image"         aria-hidden="true"></div>
+  <div class="bg-video-overlay" aria-hidden="true"></div>
+
+  <main class="content">
+    <section class="auth-wrap">
+
+      <!-- IZQUIERDA -->
+      <div class="auth-left">
+        <div class="brand-block">
+          <img class="brand-logo" src="assets/brand/absolute-blanco-logo.png" alt="Absolute" />
+          <p class="brand-tagline">
+            Recupera tu acceso con un código enviado a tu correo.
+          </p>
+        </div>
+      </div>
+
+      <!-- DERECHA -->
+      <div class="auth-right">
+        <div class="auth-card">
+
+          <!-- Mensajes globales (step 2 y 3) -->
+          <div class="top-msg" *ngIf="step !== 'request'">
+            <div class="server-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+            <div class="server-ok"    *ngIf="infoMsg && !errorMsg">{{ infoMsg }}</div>
+          </div>
+
+          <!-- ========================= -->
+          <!-- STEP 1: PEDIR CORREO      -->
+          <!-- ========================= -->
+          <form
+            class="form"
+            *ngIf="step === 'request'"
+            [formGroup]="requestForm"
+            (ngSubmit)="onRequest()"
+            novalidate
+          >
+            <div class="server-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+            <div class="server-ok"    *ngIf="infoMsg && !errorMsg">{{ infoMsg }}</div>
+
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">mail</span>
+                <input
+                  id="correo"
+                  type="email"
+                  formControlName="correo"
+                  placeholder="Correo electrónico"
+                  autocomplete="email"
+                  aria-label="Correo electrónico"
+                  [attr.aria-invalid]="correoCtrl?.touched && correoCtrl?.invalid"
+                />
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="correoCtrl?.touched && correoCtrl?.invalid">
+                Ingresa un correo válido.
+              </p>
+            </div>
+
+            <button
+              class="btn-primary btn-arrow"
+              type="submit"
+              [disabled]="loading || requestForm.invalid"
+              [class.is-loading]="loading"
+            >
+              <span class="btn-label"   *ngIf="!loading">Enviar código</span>
+              <span class="btn-loading" *ngIf="loading" aria-live="polite">
+                <span class="spinner" aria-hidden="true"></span>
+              </span>
+            </button>
+
+            <a class="forgot-link" [routerLink]="['/login']">Volver al login</a>
+          </form>
+
+          <!-- ========================= -->
+          <!-- STEP 2: VALIDAR CODIGO    -->
+          <!-- ========================= -->
+          <form
+            class="form"
+            *ngIf="step === 'code'"
+            [formGroup]="codeForm"
+            (ngSubmit)="onValidateCode()"
+            novalidate
+          >
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">key</span>
+                <input
+                  id="code"
+                  type="text"
+                  formControlName="code"
+                  placeholder="Código (6 dígitos)"
+                  inputmode="numeric"
+                  maxlength="6"
+                  aria-label="Código de verificación"
+                  [attr.aria-invalid]="codeCtrl?.touched && codeCtrl?.invalid"
+                />
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="codeCtrl?.touched && codeCtrl?.invalid">
+                Ingresa el código de 6 dígitos.
+              </p>
+            </div>
+
+            <button
+              class="btn-primary btn-arrow"
+              type="submit"
+              [disabled]="loading || codeForm.invalid"
+              [class.is-loading]="loading"
+            >
+              <span class="btn-label"   *ngIf="!loading">Validar código</span>
+              <span class="btn-loading" *ngIf="loading" aria-live="polite">
+                <span class="spinner" aria-hidden="true"></span>
+              </span>
+            </button>
+
+            <div class="divider" aria-hidden="true"></div>
+
+            <a class="support-link" href="javascript:void(0)" (click)="resend()">
+              Reenviar código
+            </a>
+
+            <a class="forgot-link" href="javascript:void(0)" (click)="cambiarCorreo()">
+              Cambiar correo
+            </a>
+
+            <a class="forgot-link" [routerLink]="['/login']">Volver al login</a>
+          </form>
+
+          <!-- ========================= -->
+          <!-- STEP 3: NUEVA CONTRASENA  -->
+          <!-- ========================= -->
+          <form
+            class="form"
+            *ngIf="step === 'password'"
+            [formGroup]="passwordForm"
+            (ngSubmit)="onConfirmPassword()"
+            novalidate
+          >
+            <!-- Nueva contraseña -->
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">lock</span>
+                <input
+                  id="nuevaContrasena"
+                  [type]="showNewPassword ? 'text' : 'password'"
+                  formControlName="nuevaContrasena"
+                  placeholder="Nueva contraseña"
+                  autocomplete="new-password"
+                  aria-label="Nueva contraseña"
+                  [attr.aria-invalid]="nuevaCtrl?.touched && nuevaCtrl?.invalid"
+                />
+                <button
+                  class="eye"
+                  type="button"
+                  (click)="toggleNewPassword()"
+                  [attr.aria-label]="showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    {{ showNewPassword ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="nuevaCtrl?.touched && nuevaCtrl?.invalid">
+                Mínimo 6 caracteres.
+              </p>
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">lock</span>
+                <input
+                  id="confirmContrasena"
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  formControlName="confirmContrasena"
+                  placeholder="Confirmar contraseña"
+                  autocomplete="new-password"
+                  aria-label="Confirmar contraseña"
+                  [attr.aria-invalid]="confirmCtrl?.touched && confirmCtrl?.invalid"
+                />
+                <button
+                  class="eye"
+                  type="button"
+                  (click)="toggleConfirmPassword()"
+                  [attr.aria-label]="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    {{ showConfirmPassword ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="confirmCtrl?.touched && confirmCtrl?.invalid">
+                Confirma la contraseña.
+              </p>
+              <p class="hint error" role="alert"
+                 *ngIf="confirmCtrl?.touched && mismatch">
+                Las contraseñas no coinciden.
+              </p>
+            </div>
+
+            <div class="server-error" *ngIf="errorMsg" role="alert">{{ errorMsg }}</div>
+
+            <button
+              class="btn-primary btn-arrow"
+              type="submit"
+              [disabled]="loading || passwordForm.invalid"
+              [class.is-loading]="loading"
+            >
+              <span class="btn-label"   *ngIf="!loading">Cambiar contraseña</span>
+              <span class="btn-loading" *ngIf="loading" aria-live="polite">
+                <span class="spinner" aria-hidden="true"></span>
+              </span>
+            </button>
+
+            <a class="forgot-link" [routerLink]="['/login']">Volver al login</a>
+          </form>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 Absolute Systems. Todos los derechos reservados.</p>
+    <p>V 0.1</p>
+    <div class="footer-links"></div>
+    <img class="footer-logo" src="assets/brand/absolute-blanco-logo.png" alt="Absolute" />
+  </footer>
+
+  <!-- Modal de exito (fuera del card) -->
+  <div
+    class="modal-backdrop"
+    *ngIf="showSuccessModal"
+    (click)="onSuccessOk()"
+    aria-hidden="true"
+  ></div>
+
+  <div
+    class="modal-card"
+    *ngIf="showSuccessModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+  >
+    <div class="modal-title" id="modal-title">{{ successTitle }}</div>
+    <div class="modal-text">{{ successText }}</div>
+
+    <button class="btn-primary btn-arrow" type="button" (click)="onSuccessOk()">
+      <span class="btn-label">OK</span>
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,507 @@
+/* =========================
+   FUENTE PRO (sin tocar index.html)
+   ========================= */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+/* ===== Base ===== */
+:host { display: block; }
+
+.login-page{
+  /* Tokens */
+  --brand: #1877f2; /* podés cambiarlo al azul de tu sistema si querés */
+  --text: #0f172a;
+  --muted: #475569;
+  --line: rgba(15, 23, 42, .10);
+
+  /*TRANSPARENTE */
+  --card: rgba(255, 255, 255, 0);
+
+  --input: #ffffffc5;
+  --input-border: rgba(15, 23, 42, .14);
+  --shadow: 0 18px 48px rgba(2, 6, 23, .16);
+
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  /*TIPOGRAFÍA + BASE GRANDE */
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* ===== Background (tu fondo de nubes + overlay) ===== */
+.bg-image{
+  position: fixed;
+  inset: 0;
+  background: url("/assets/brand/nubes_inferior.jpg") center/cover no-repeat;
+  transform: scale(1.02);
+  filter: saturate(1.05) contrast(1.02);
+  z-index: 0;
+}
+
+.bg-video-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.18);
+  z-index: 1;
+}
+
+/* ===== Layout principal tipo Facebook ===== */
+.content{
+  position: relative;
+  z-index: 2;
+  min-height: calc(100vh - 90px); /* deja espacio al footer */
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+}
+
+/* Contenedor 2 columnas */
+.auth-wrap{
+  width: min(1040px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 44px;
+  align-items: center;
+}
+
+/* IZQUIERDA */
+.auth-left{
+  display: flex;
+  align-items: center;
+}
+
+.brand-block{
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* desktop: alineado a la izquierda */
+}
+
+.brand-name-big{
+  font-size: clamp(25px, 6vw, 44px);
+  line-height: 0.95;
+  font-weight: 500;
+  letter-spacing: -1.6px;
+  color: rgba(255,255,255,0.96);
+  margin: 0 0 14px 0;
+}
+
+.brand-tagline{
+  margin: 0;
+  font-size: clamp(16px, 2.2vw, 22px);
+  line-height: 1.35;
+  font-weight: 600;
+  color: rgba(255,255,255,0.88);
+}
+
+
+/* Desktop (por defecto): a la izquierda */
+.brand-logo{
+  width: 100px;
+  max-width: 50%;
+  height: auto;
+  display: block;
+  margin: 0 0 10px 0;  /* <- antes tenías -15px, eso lo desalineaba */
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
+  transform: translateX(-2px); /* solo si el archivo trae padding */
+}
+/* DERECHA */
+.auth-right{
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.auth-card{
+  width: 100%;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 18px 18px 16px 18px;
+}
+
+/* Badge con logo de clínica */
+.clinic-badge{
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  margin: 2px auto 12px auto;
+  display: grid;
+  place-items: center;
+
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.clinic-logo{
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Titulos dentro de la card */
+.title-block{
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.title-block h1{
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.title-block p{
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: rgba(71, 85, 105, 0.95);
+}
+
+/* ===== Form ===== */
+.form{
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.field{ display: grid; gap: 6px; }
+
+.control{
+  position: relative;
+}
+
+.control-icon{
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(71, 85, 105, 0.75);
+  font-size: 18px;
+}
+
+/* Inputs estilo pro, similares a FB */
+.control input{
+  width: 100%;
+  height: 46px;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  background: var(--input);
+
+  padding: 0 44px 0 40px;
+  outline: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.92);
+
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.control input::placeholder{
+  color: rgba(100, 116, 139, 0.75);
+  font-weight: 600;
+}
+
+.control input:focus{
+  border-color: rgba(24, 119, 242, 0.70);
+  box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.16);
+}
+
+/* OJO button */
+.eye{
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: 0;
+  background: transparent;
+  padding: 6px;
+  cursor: pointer;
+  color: rgba(71, 85, 105, 0.75);
+}
+
+.eye:hover{
+  color: rgba(15, 23, 42, 0.75);
+}
+
+/* Errors */
+.hint{
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: rgba(100,116,139,.9);
+}
+
+.hint.error{
+  color: #ffffff;
+}
+
+.server-error{
+  margin-top: 4px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(225, 29, 72, 0.22);
+  background: rgba(225, 29, 72, 0.08);
+  color: #be123c;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ===== Botón principal (pro, sin degradados) ===== */
+.btn-primary{
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 8px;
+
+  background: var(--brand);
+  color: #fff;
+
+  /* un poquito más grande */
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+
+  cursor: pointer;
+  transition: transform .08s ease, opacity .12s ease, background .15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  box-shadow: 0 12px 26px rgba(24, 119, 242, 0.22);
+}
+
+.btn-primary:hover{
+  background: #166fe5;
+}
+
+.btn-primary:active{
+  transform: translateY(1px);
+}
+
+.btn-primary:disabled{
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Flechita si la mantenés */
+.btn-arrow .arrow-wrapper{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-arrow .arrow{
+  width: 12px;
+  height: 2px;
+  background: #fff;
+  position: relative;
+}
+
+.btn-arrow .arrow::before{
+  content: "";
+  position: absolute;
+  right: 2px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+}
+
+/* Loading spinner */
+.btn-primary.is-loading{ cursor: wait; }
+
+.btn-loading{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: btnspin 0.8s linear infinite;
+}
+
+@keyframes btnspin { to { transform: rotate(360deg); } }
+
+/* Links debajo (tipo FB) */
+.forgot-link{
+  display: block;
+  text-align: center;
+  margin-top: 6px;
+
+  /*un poquito más grande */
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.452);
+}
+
+.forgot-link:hover{
+  text-decoration: none;
+}
+/* Quitar subrayado de links */
+.forgot-link,
+.support-link {
+  text-decoration: none;
+}
+
+/* (Opcional) que no se subraye ni al pasar el mouse */
+.forgot-link:hover,
+.support-link:hover {
+  text-decoration: none;
+}
+
+
+.divider{
+  margin: 12px 0 10px 0;
+  height: 1px;
+  background: rgba(15, 23, 42, 0.10);
+}
+
+/* Soporte (en lugar de crear cuenta) */
+.support-link{
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+
+  color: rgba(15, 23, 42, 0.88);
+  /* ✅ un poquito más grande */
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.support-link:hover{
+  background: rgba(15, 23, 42, 0.05);
+}
+
+/* Texto tipo FB abajo */
+.auth-footnote{
+  margin: 0;
+  text-align: center;
+  color: rgba(255,255,255,0.86);
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 420px;
+}
+
+/* ===== Footer (tu footer, legible sobre nubes) ===== */
+.footer{
+  position: relative;
+  z-index: 2;
+  padding: 16px 18px 18px;
+  text-align: center;
+
+  color: rgba(255,255,255,0.80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.footer p{
+  margin: 4px 0;
+}
+
+.footer-logo{
+  position: absolute;
+  right: 16px;
+  bottom: 5px;
+  width: 35px;
+  height: auto;
+  opacity: 0.92;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 980px){
+  .auth-wrap{
+    grid-template-columns: 1fr;
+    gap: 18px;
+    justify-items: center;
+  }
+
+  .auth-left{
+    justify-content: center;
+    text-align: center;
+  }
+
+  .brand-block{
+    max-width: 560px;
+  }
+
+  .brand-name-big{
+    font-size: clamp(30px, 8vw, 44px);
+  }
+}
+
+@media (max-width: 520px){
+  .content{
+    padding: 18px 12px;
+    min-height: calc(100vh - 110px);
+  }
+
+  .auth-card{
+    padding: 16px 14px 14px;
+    border-radius: 12px;
+  }
+
+  .control input{
+    height: 44px;
+  }
+
+  .btn-primary{
+    height: 44px;
+  }
+
+  .footer{
+    padding-bottom: 56px;
+  }
+
+  .footer-logo{
+    width: 26px;
+  }
+}
+/* Móvil / tablet: centrado */
+@media (max-width: 980px){
+  .brand-logo{
+    margin: 0 auto 14px; /*centro */
+  }
+}
+
+/* Material icons */
+.control-icon.material-symbols-outlined{ line-height: 1; }
+.eye .material-symbols-outlined{
+  font-size: 20px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,295 @@
+/* src/app/modules/caja/caja-citas.component.scss */
+
+$bg:      #f5f6fa;
+$surface: #ffffff;
+$border:  #e8eaed;
+$text:    #1a1d23;
+$muted:   #6b7280;
+$primary: #2563eb;
+$danger:  #dc2626;
+$green:   #16a34a;
+$warn:    #d97706;
+$radius:  12px;
+$shadow:  0 1px 3px rgba(0,0,0,.08);
+
+.page {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 24px; background: $bg; min-height: 100%;
+}
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  h1  { margin: 0; font-size: 1.4rem; font-weight: 700; color: $text; }
+  .sub { margin: 4px 0 0; color: $muted; font-size: .85rem; }
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.card {
+  background: $surface; border-radius: $radius;
+  border: 1px solid $border; box-shadow: $shadow; overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid $border;
+  h2 { margin: 0; font-size: .95rem; font-weight: 600; }
+}
+
+// ─── Filtros ──────────────────────────────────────────────────────────────────
+.filters-card { padding: 14px 18px; }
+.filters {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+  .f {
+    display: flex; flex-direction: column; gap: 4px; min-width: 120px;
+    &.grow  { flex: 1; min-width: 200px; }
+    &.short { max-width: 80px; }
+    label { font-size: .78rem; font-weight: 500; color: $muted; }
+  }
+  input, select {
+    height: 36px; padding: 0 10px; border: 1px solid $border; border-radius: 8px;
+    font-size: .875rem; background: $bg; color: $text; outline: none;
+    &:focus { border-color: $primary; background: $surface; }
+  }
+}
+
+// ─── Grid ─────────────────────────────────────────────────────────────────────
+.grid {
+  display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+// ─── Lista de citas ───────────────────────────────────────────────────────────
+.list-card .list-wrap { max-height: calc(100vh - 270px); overflow-y: auto; }
+
+.cita {
+  display: flex; gap: 10px; width: 100%; padding: 12px 16px;
+  text-align: left; background: none; border: none;
+  border-bottom: 1px solid $border; cursor: pointer; transition: background .12s;
+  &:hover  { background: #f8f9ff; }
+  &.active { background: #eff6ff; border-left: 3px solid $primary; padding-left: 13px; }
+  &:last-child { border-bottom: none; }
+}
+
+.pago-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
+  &.dot-pend { background: #f87171; }
+  &.dot-parc { background: #fbbf24; }
+  &.dot-ok   { background: #4ade80; }
+}
+
+.cita-body { flex: 1; min-width: 0; }
+.c-top {
+  display: flex; justify-content: space-between; margin-bottom: 4px;
+  .c-name  { font-weight: 600; font-size: .875rem; color: $text;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-time  { font-size: .78rem; color: $muted; white-space: nowrap; margin-left: 8px; }
+}
+.c-mid  { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 3px; }
+.c-foot { font-size: .78rem; color: $muted; }
+
+// ─── Panel derecho ────────────────────────────────────────────────────────────
+.detail-card {
+  .no-select {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 32px; text-align: center; color: $muted;
+    .no-icon  { font-size: 3rem; opacity: .25; margin-bottom: 12px; }
+    .no-title { font-size: 1.1rem; font-weight: 600; color: #9ca3af; margin-bottom: 6px; }
+  }
+}
+
+.cobro-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 16px 20px; border-bottom: 1px solid $border;
+  .cobro-paciente { font-size: 1.05rem; font-weight: 700; color: $text; }
+  .cobro-sub      { margin-top: 3px; }
+}
+
+.pdf-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+// ─── Resumen ──────────────────────────────────────────────────────────────────
+.resume {
+  display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid $border;
+  @media (max-width: 700px) { grid-template-columns: repeat(2, 1fr); }
+
+  .rbox {
+    padding: 16px; border-right: 1px solid $border;
+    &:last-child { border-right: none; }
+    .lbl { font-size: .72rem; color: $muted; font-weight: 500; margin-bottom: 4px;
+           text-transform: uppercase; letter-spacing: .04em; }
+    .val { font-size: 1rem; font-weight: 600; color: $text;
+           &.strong { font-size: 1.08rem; }
+           &.green  { color: $green; } }
+  }
+}
+
+.banner-paid {
+  display: flex; align-items: center; gap: 8px; margin: 14px 20px 0;
+  padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 8px; color: $green; font-size: .875rem; font-weight: 500;
+}
+
+// ─── Secciones ────────────────────────────────────────────────────────────────
+.section { padding: 14px 20px; border-top: 1px solid $border; }
+.section-locked { opacity: .65; pointer-events: none; }
+
+.section-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  h3 { margin: 0; font-size: .9rem; font-weight: 600; color: $text; }
+}
+
+.section-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+
+// ─── Toggle servicios ─────────────────────────────────────────────────────────
+.section-toggle-wrap { padding-bottom: 6px; }
+
+.expand-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: none; cursor: pointer; padding: 4px 0 10px;
+  text-align: left; transition: opacity .15s;
+  &:hover { opacity: .7; }
+  h3 { margin: 0; font-size: .9rem; font-weight: 600; color: $text; }
+  .material-symbols-outlined { font-size: 1.2rem; color: $muted; }
+  .expand-hint { flex: 1; }
+}
+
+.expand-body { margin-top: 4px; }
+
+// ─── Formulario de pago ───────────────────────────────────────────────────────
+.pay-form {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+  .f {
+    display: flex; flex-direction: column; gap: 4px;
+    &.grow { flex: 1; min-width: 160px; }
+    label { font-size: .78rem; font-weight: 500; color: $muted; }
+    input, select {
+      height: 38px; padding: 0 10px; border: 1px solid $border; border-radius: 8px;
+      font-size: .875rem; background: $bg; color: $text; outline: none;
+      &:focus { border-color: $primary; background: $surface; }
+    }
+  }
+}
+
+// ─── Historial de pagos ───────────────────────────────────────────────────────
+.pay-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.pay-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: $bg; border-radius: 8px; border: 1px solid $border;
+  .p-left { display: flex; flex-direction: column; gap: 3px; }
+  .p-top  { display: flex; align-items: center; gap: 8px; }
+  .p-amt  { font-size: 1rem; font-weight: 700; &.green { color: $green; } }
+}
+
+// ─── Tabla items ──────────────────────────────────────────────────────────────
+.table {
+  border: 1px solid $border; border-radius: 8px; overflow: hidden;
+  margin-bottom: 12px; font-size: .85rem;
+  .tr {
+    display: grid; grid-template-columns: 1fr 70px 90px 90px 36px;
+    align-items: center; padding: 8px 12px; border-bottom: 1px solid $border;
+    &:last-child { border-bottom: none; }
+    &.th { background: $bg; font-weight: 600; font-size: .78rem; color: $muted;
+           text-transform: uppercase; letter-spacing: .04em; }
+    &.total-row { background: #f9fafb; }
+    .r { text-align: right; }
+    .name    { font-weight: 500; }
+    .subtotal { font-weight: 600; }
+  }
+}
+
+.mini-in {
+  width: 100%; max-width: 70px; height: 30px; padding: 0 6px;
+  border: 1px solid $border; border-radius: 6px; font-size: .85rem;
+  text-align: right; background: $surface; outline: none;
+  &:focus    { border-color: $primary; }
+  &:disabled { background: $bg; color: $muted; }
+}
+
+.empty-items { padding: 14px 0; color: $muted; font-size: .875rem; text-align: center; }
+
+// ─── Agregar servicio ─────────────────────────────────────────────────────────
+.inline-add {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-top: 12px;
+  .f {
+    display: flex; flex-direction: column; gap: 4px;
+    &.grow  { flex: 1; min-width: 160px; }
+    &.short { max-width: 80px; }
+    label { font-size: .78rem; font-weight: 500; color: $muted; }
+    input, select {
+      height: 36px; padding: 0 10px; border: 1px solid $border; border-radius: 8px;
+      font-size: .875rem; background: $bg; color: $text; outline: none;
+      &:focus { border-color: $primary; background: $surface; }
+    }
+  }
+}
+
+// ─── Botones ──────────────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 16px; border: 1px solid transparent;
+  border-radius: 8px; font-size: .875rem; font-weight: 500;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+  &.primary  { background: $primary; color: #fff;
+               &:hover:not(:disabled) { background: #1d4ed8; } }
+  &.ghost    { background: $surface; border-color: $border; color: $text;
+               &:hover:not(:disabled) { background: $bg; } }
+  &.sm       { height: 32px; padding: 0 12px; font-size: .8rem; }
+  &.icon-only { width: 34px; height: 34px; padding: 0; justify-content: center; }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+}
+
+.link {
+  background: none; border: none; cursor: pointer; font-size: .8rem;
+  padding: 2px 4px; border-radius: 4px;
+  &.danger   { color: $danger; &:hover { background: #fee2e2; } }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+
+// ─── Chips / pills / badge ───────────────────────────────────────────────────
+.chip {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: .75rem; font-weight: 500; background: #e0e7ff; color: #3730a3;
+  &.ghost { background: $bg; color: $muted; border: 1px solid $border; }
+}
+.pill {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: .78rem; font-weight: 600; letter-spacing: .03em;
+  &.pill-ok   { background: #dcfce7; color: $green; }
+  &.pill-warn { background: #fef3c7; color: $warn; }
+  &.pill-pend { background: #fee2e2; color: $danger; }
+}
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+  background: $bg; border: 1px solid $border; font-size: .75rem; font-weight: 600; color: $muted;
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+.skeleton { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.sk-row, .sk-big {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%; border-radius: 8px; animation: shimmer 1.4s infinite;
+}
+.sk-row { height: 52px; }
+.sk-big { height: 90px; }
+
+// ─── Alert ────────────────────────────────────────────────────────────────────
+.alert-error {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: 8px; color: $danger; font-size: .875rem;
+  .close-alert { background: none; border: none; cursor: pointer; color: $danger; }
+}
+
+// ─── Empty ────────────────────────────────────────────────────────────────────
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 20px; color: $muted; text-align: center; font-size: .875rem;
+  .material-symbols-outlined { font-size: 2.5rem; opacity: .3; margin-bottom: 8px; }
+}
+
+// ─── Utilidades ───────────────────────────────────────────────────────────────
+.muted  { color: $muted; }
+.green  { color: $green; }
+.strong { font-weight: 700; }
+.sm     { font-size: .8rem; }
+.hint   { font-size: .8rem; margin-top: 8px; }

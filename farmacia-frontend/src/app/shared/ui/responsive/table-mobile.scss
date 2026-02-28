@@ -1,0 +1,159 @@
+/* =========================
+   RESPONSIVE PARA MÓVIL
+========================= */
+@media (max-width: 720px) {
+
+  .page {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    .search {
+      min-width: 100%;
+    }
+
+    .toggle {
+      width: fit-content;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: flex-start;
+    }
+  }
+
+  /* ====== Tabla (móvil) ======
+     Ocultamos columnas pesadas para que se vea bien.
+     (ID, Usuario, Rol, Nombre, Teléfono, Estado, Acciones)
+     Ocultamos: Creado(7), Actualizado(8)
+  */
+  .table {
+    min-width: 0; /* importante en móvil */
+  }
+
+  .table-wrap {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ocultar columnas 7 y 8 en móvil */
+  .table thead th:nth-child(7),
+  .table thead th:nth-child(8),
+  .table tbody td:nth-child(7),
+  .table tbody td:nth-child(8) {
+    display: none;
+  }
+
+  /* Mejorar celda usuario */
+  .usercell {
+    gap: 8px;
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .usertext .u {
+      font-size: 14px;
+    }
+
+    .usertext .s {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* Acciones que no se aplasten */
+  .actions-col {
+    gap: 8px;
+  }
+
+  /* Pager en móvil */
+  .pager {
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .pager-info {
+      width: 100%;
+      text-align: center;
+    }
+
+    .page-size {
+      width: 100%;
+      justify-content: center;
+      margin-left: 0;
+    }
+  }
+
+  /* Modal: que quepa en pantalla */
+  .modal {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+  }
+
+  .grid {
+    grid-template-columns: 1fr; /* 1 columna */
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* Confirm también */
+  .confirm {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+  }
+
+  .confirm-foot {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+/* Extra: teléfonos pequeños */
+@media (max-width: 380px) {
+  .usercell .usertext .s {
+    max-width: 140px;
+  }
+}
+
+
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+@media (max-width: 720px) {
+  .desktop-only { display: none; }
+  .mobile-only { display: block; }
+}

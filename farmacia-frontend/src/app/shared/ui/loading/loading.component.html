@@ -1,0 +1,21 @@
+<div class="loading" [class.fullscreen]="fullscreen">
+  <div class="wrap" [style.width.px]="size" [style.height.px]="size">
+    <div
+      class="ring"
+      [style.borderWidth.px]="stroke"
+      aria-hidden="true"
+    ></div>
+
+    <div class="center">
+      <img
+        class="logo"
+        [class.dark-filter]="logoDarkFilter"
+        [src]="logoSrc"
+        alt="Absolute"
+        draggable="false"
+      />
+    </div>
+  </div>
+
+  <div class="text" *ngIf="text">{{ text }}</div>
+</div>

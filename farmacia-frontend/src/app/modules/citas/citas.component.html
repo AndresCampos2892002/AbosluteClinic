@@ -1,0 +1,422 @@
+<!-- src/app/modules/citas/citas.component.html -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>Citas</h1>
+      <p class="sub">Calendario mensual + agenda del día (HOY por defecto).</p>
+    </div>
+    <div class="right">
+      <button class="btn ghost" type="button" (click)="goToday()"
+              data-tooltip="Ir al día de hoy" aria-label="Ir a hoy">
+        Hoy
+      </button>
+      <button class="btn primary btn-icon" type="button" (click)="openCreateModal()"
+              data-tooltip="Crear nueva cita" aria-label="Nueva cita">
+        <img class="i" src="assets/icons/icon_add.svg" alt="Nueva cita" />
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTROS colapsables -->
+  <details class="card filters-card" [open]="filtersOpen">
+    <summary class="filters-summary" (click)="toggleFilters(); $event.preventDefault()">
+      <div class="sum-left">
+        <h2>Filtros</h2>
+        <div class="sum-chips">
+          <span class="pill"><b>Sucursal:</b> {{ sucursalLabel }}</span>
+          <span class="pill"><b>Especialista:</b> {{ especialistaLabel }}</span>
+          <span class="pill"><b>Estado:</b> {{ estadoLabel }}</span>
+          <span class="pill" *ngIf="q?.trim()"><b>Buscar:</b> {{ q }}</span>
+        </div>
+      </div>
+      <div class="sum-right">
+        <span class="hint" *ngIf="loadingCatalogos || loadingCitas">Cargando...</span>
+        <span class="hint" *ngIf="!(loadingCatalogos || loadingCitas)">Mostrar/ocultar</span>
+        <span class="caret" aria-hidden="true"></span>
+      </div>
+    </summary>
+
+    <div class="filters">
+      <div class="field">
+        <label for="fil-sucursal">Sucursal</label>
+        <select id="fil-sucursal" [(ngModel)]="fSucursal" (ngModelChange)="setFiltroSucursal($event)">
+          <option [ngValue]="0">Todas</option>
+          <option *ngFor="let s of store.sucursales" [ngValue]="s.idSucursal">{{ s.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fil-especialista">Especialista</label>
+        <select id="fil-especialista" [(ngModel)]="fEspecialista" (ngModelChange)="setFiltroEspecialista($event)">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let e of store.especialistas" [ngValue]="e.idUsuario">{{ e.nombre }} {{ e.apellido }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fil-estado">Estado</label>
+        <select id="fil-estado" [(ngModel)]="fEstado" (ngModelChange)="setFiltroEstado($event)">
+          <option value="">Todos</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+          <option value="CONFIRMADA">CONFIRMADA</option>
+          <option value="TERMINADA">TERMINADA</option>
+          <option value="CANCELADA">CANCELADA</option>
+          <option value="NO_ASISTIO">NO ASISTIO</option>
+          <option value="REPROGRAMADA">REPROGRAMADA</option>
+        </select>
+      </div>
+
+      <div class="field grow">
+        <label for="fil-buscar">Buscar</label>
+        <input id="fil-buscar" [(ngModel)]="q" (ngModelChange)="onQChange($event)"
+               placeholder="Paciente / teléfono / servicio..." />
+      </div>
+    </div>
+  </details>
+
+  <!-- LAYOUT: calendario + agenda -->
+  <div class="layout">
+
+    <!-- CALENDARIO MENSUAL -->
+    <div class="card calendar-card">
+      <div class="calendar-head">
+        <div class="title">{{ monthLabel }}</div>
+        <div class="nav">
+          <button class="icon-btn" type="button" (click)="prevMonth()" aria-label="Mes anterior">&#8249;</button>
+          <button class="icon-btn" type="button" (click)="nextMonth()" aria-label="Mes siguiente">&#8250;</button>
+        </div>
+      </div>
+
+      <div class="month-weekdays">
+        <div class="wd" *ngFor="let w of weekDayNames">{{ w }}</div>
+      </div>
+
+      <div class="month-grid" *ngIf="(citasFiltradas$ | async) as citas">
+        <button
+          type="button"
+          class="mday"
+          *ngFor="let d of monthDays; trackBy: trackByMonthDay"
+          (click)="onCalendarDayClick(d)"
+          [class.outside]="isOutsideMonth(d)"
+          [class.today]="isToday(d)"
+          [class.selected]="isSelected(d)"
+          [attr.aria-label]="'Día ' + (d | date:'d') + ', ' + countForDay(citas, d) + ' citas'"
+        >
+          <div class="top">
+            <div class="num">{{ d | date:'d' }}</div>
+            <button
+              type="button"
+              class="add"
+              title="Crear cita"
+              aria-label="Crear cita en este día"
+              (click)="openCreateForDay(d); $event.stopPropagation()"
+            >+</button>
+          </div>
+          <div class="mini">
+            <span class="count" *ngIf="countForDay(citas, d) > 0">
+              {{ countForDay(citas, d) }}
+            </span>
+          </div>
+        </button>
+      </div>
+
+      <div class="calendar-foot">
+        Click en un día para ver la agenda.
+        <div>"+" crea una cita en esa fecha.</div>
+      </div>
+    </div>
+
+    <!-- AGENDA DEL DÍA -->
+    <div class="card agenda-card">
+      <div class="card-head agenda-head">
+        <div>
+          <h2>Agenda</h2>
+          <div class="right-date">{{ selectedDate | date:'EEEE, dd/MM/yyyy' }}</div>
+        </div>
+        <div class="right">
+          <div class="count-pill" *ngIf="(citasFiltradas$ | async) as citas">
+            {{ dayCitas(citas, selectedDate).length }} citas
+          </div>
+        </div>
+      </div>
+
+      <div class="agenda-list" *ngIf="(citasFiltradas$ | async) as citas">
+        <ng-container *ngIf="dayCitas(citas, selectedDate) as dayList">
+          <div class="empty" *ngIf="dayList.length === 0">
+            No hay citas para este día.
+          </div>
+
+          <div
+            class="appt"
+            role="button"
+            tabindex="0"
+            [class.menu-open]="isCitaMenuOpen(c)"
+            *ngFor="let c of dayList; trackBy: trackByCita"
+            (click)="toggleCitaMenu(c)"
+            (keydown.enter)="toggleCitaMenu(c)"
+            (keydown.space)="toggleCitaMenu(c); $event.preventDefault()"
+            [attr.aria-expanded]="isCitaMenuOpen(c)"
+            [attr.aria-label]="'Cita de ' + c.paciente_nombre + ', ' + c.estado"
+          >
+            <div class="time">
+              <div class="h">{{ c.fecha_inicio | date:'HH:mm' }}</div>
+              <div class="m">{{ c.duracion_minutos }} min</div>
+            </div>
+
+            <div class="main">
+              <div class="line1">
+                <span class="name">{{ c.paciente_nombre }}</span>
+                <span class="dot" aria-hidden="true">&bull;</span>
+                <span class="svc">{{ c.servicio_nombre }}</span>
+              </div>
+              <div class="line2 muted">
+                {{ c.telefono || '—' }}
+                <span *ngIf="c.motivo"> &middot; {{ c.motivo }}</span>
+              </div>
+              <div class="tags">
+                <span class="st" *ngIf="viendoTodasSucursales">{{ c.sucursal_nombre }}</span>
+                <span class="st" *ngIf="c.canal">{{ c.canal }}</span>
+                <span [class]="badgeClass(c.estado)">{{ c.estado }}</span>
+              </div>
+
+              <!-- Submenú de acciones -->
+              <div class="appt-menu" *ngIf="isCitaMenuOpen(c)" role="group" aria-label="Acciones de la cita">
+                <button class="icon-action" type="button" (click)="onEditarCita(c, $event)"
+                        data-tooltip="Editar cita" aria-label="Editar cita">
+                  <img src="assets/icons/icon_edit.svg" alt="Editar" />
+                </button>
+
+                <button *ngIf="canConfirmar(c)" class="icon-action ok" type="button"
+                        (click)="onConfirmarCita(c, $event)"
+                        data-tooltip="Confirmar cita" aria-label="Confirmar cita">
+                  <img src="assets/icons/icon_check.svg" alt="Confirmar" />
+                </button>
+
+                <button *ngIf="canCobrar(c)" class="icon-action" type="button"
+                        (click)="onCobrarCita(c, $event)"
+                        data-tooltip="Cobrar" aria-label="Ir a cobrar">
+                  <img src="assets/icons/icon_money.svg" alt="Cobrar" />
+                </button>
+
+                <button *ngIf="c.estado === 'PENDIENTE'" class="icon-action danger" type="button"
+                        (click)="onAnularCita(c, $event)"
+                        data-tooltip="Anular cita" aria-label="Anular cita">
+                  <img src="assets/icons/icon_delete.svg" alt="Anular" />
+                </button>
+              </div>
+            </div>
+
+            <div class="chev" [class.open]="isCitaMenuOpen(c)" aria-hidden="true">&#8250;</div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL CREAR/EDITAR CITA -->
+  <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeModal()" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-cita-title"
+         (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <div>
+          <h3 id="modal-cita-title">{{ modo === 'CREAR' ? 'Nueva cita' : ('Editar cita #' + editId) }}</h3>
+          <div class="muted">Completa los campos obligatorios</div>
+        </div>
+        <button class="btn sm ghost" type="button" (click)="closeModal()" aria-label="Cerrar">&#10005;</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="grid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+          <div>
+            <label for="c-sucursal">Sucursal *</label>
+            <select id="c-sucursal" formControlName="id_sucursal"
+                    (change)="setFormSucursal($any($event.target).value)">
+              <option *ngFor="let s of store.sucursales" [value]="s.idSucursal">{{ s.nombre }}</option>
+            </select>
+          </div>
+
+          <!-- Paciente + botón + -->
+          <div class="field-inline">
+            <div class="field">
+              <label for="c-paciente">Paciente *</label>
+              <select id="c-paciente" formControlName="id_paciente">
+                <option [ngValue]="null">Seleccionar...</option>
+                <option *ngFor="let p of store.pacientes" [ngValue]="p.idPaciente">
+                  {{ p.nombres }} {{ p.apellidos }}
+                </option>
+              </select>
+            </div>
+            <button type="button" class="icon-add" title="Crear paciente"
+                    aria-label="Crear nuevo paciente" (click)="openPacienteModal()">+</button>
+          </div>
+
+          <div>
+            <label for="c-servicio">Servicio *</label>
+            <select id="c-servicio" formControlName="id_servicio">
+              <option [ngValue]="null">Seleccionar...</option>
+              <option *ngFor="let s of store.servicios" [ngValue]="s.idServicio">{{ s.nombre }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="c-especialista">Especialista</label>
+            <select id="c-especialista" formControlName="id_especialista">
+              <option [ngValue]="null">Seleccionar...</option>
+              <option *ngFor="let e of store.especialistas" [ngValue]="e.idUsuario">
+                {{ e.nombre }} {{ e.apellido }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label for="c-fecha">Fecha *</label>
+            <input id="c-fecha" type="date" formControlName="fecha" />
+          </div>
+
+          <div>
+            <label for="c-hora">Hora *</label>
+            <input id="c-hora" type="time" formControlName="hora" />
+          </div>
+
+          <div class="field">
+            <label for="c-duracion">Duración</label>
+            <div class="dur-select">
+              <select id="c-duracion"
+                      [value]="form.value.duracion_minutos"
+                      (change)="setDuracionMinutos($any($event.target).value)">
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">1h</option>
+                <option value="90">1h 30</option>
+                <option value="120">2h</option>
+                <option value="150">2h 30</option>
+                <option value="180">3h</option>
+                <option value="210">3h 30</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="c-estado">Estado</label>
+            <select id="c-estado" formControlName="estado">
+              <option value="PENDIENTE">PENDIENTE</option>
+              <option value="CONFIRMADA">CONFIRMADA</option>
+              <option value="REPROGRAMADA">REPROGRAMADA</option>
+              <option value="TERMINADA">TERMINADA</option>
+              <option value="CANCELADA">CANCELADA</option>
+              <option value="NO_ASISTIO">NO ASISTIO</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="c-canal">Canal</label>
+            <select id="c-canal" formControlName="canal">
+              <option value="WHATSAPP">WHATSAPP</option>
+              <option value="FACEBOOK">FACEBOOK</option>
+              <option value="LLAMADA">LLAMADA</option>
+              <option value="WEB">WEB</option>
+              <option value="RECEPCION">RECEPCION</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label for="c-motivo">Motivo</label>
+            <input id="c-motivo" formControlName="motivo" placeholder="Ej: dolor, control, evaluación..." />
+          </div>
+
+          <div class="full">
+            <label for="c-notas">Notas</label>
+            <textarea id="c-notas" formControlName="notas" rows="3" placeholder="Notas internas..."></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <div class="muted modal-msg">{{ msg || '&nbsp;' }}</div>
+            <button class="btn ghost" type="button" (click)="closeModal()" [disabled]="saving">Cancelar</button>
+            <button class="btn primary" type="submit" [disabled]="saving || form.invalid">
+              {{ saving ? 'Guardando...' : (modo === 'CREAR' ? 'Guardar' : 'Actualizar') }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR PACIENTE RAPIDO -->
+  <div class="modal-backdrop" *ngIf="pacienteModalOpen" (click)="closePacienteModal()" aria-hidden="true">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-pac-title"
+         (click)="$event.stopPropagation()">
+
+      <div class="modal-head">
+        <div>
+          <h3 id="modal-pac-title">Nuevo paciente</h3>
+          <div class="muted">Nombre completo, teléfono y correo</div>
+        </div>
+        <button class="btn sm ghost" type="button" (click)="closePacienteModal()" aria-label="Cerrar">&#10005;</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="grid" [formGroup]="pacienteForm" (ngSubmit)="crearPacienteRapido()" novalidate>
+
+          <div class="full">
+            <label for="rp-nombre">Nombre completo *</label>
+            <input id="rp-nombre" formControlName="nombreCompleto" placeholder="Ej: Juan Pérez" />
+            <small *ngIf="pacienteForm.get('nombreCompleto')?.touched && pacienteForm.get('nombreCompleto')?.invalid">
+              Requerido (mínimo 3 caracteres).
+            </small>
+          </div>
+
+          <div>
+            <label for="rp-tel">Teléfono *</label>
+            <input id="rp-tel" formControlName="telefono" placeholder="Ej: 5555-5555" />
+            <small *ngIf="pacienteForm.get('telefono')?.touched && pacienteForm.get('telefono')?.invalid">
+              Requerido.
+            </small>
+          </div>
+
+          <div>
+            <label for="rp-correo">Correo</label>
+            <input id="rp-correo" formControlName="correo" placeholder="Ej: correo@dominio.com" />
+          </div>
+
+          <div class="modal-actions">
+            <div class="muted" style="margin-right:auto">{{ pacienteMsg }}</div>
+            <button class="btn ghost" type="button" (click)="closePacienteModal()" [disabled]="pacienteSaving">Cancelar</button>
+            <button class="btn primary" type="submit" [disabled]="pacienteSaving || pacienteForm.invalid">
+              {{ pacienteSaving ? 'Creando...' : 'Crear' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM ANULAR CITA -->
+  <div class="modal-backdrop confirm-backdrop" *ngIf="confirmAnularOpen"
+       (click)="closeConfirmAnular()" aria-hidden="true"></div>
+  <div class="confirm" *ngIf="confirmAnularOpen" role="dialog" aria-modal="true" aria-labelledby="confirm-anular-title">
+    <div class="confirm-head">
+      <h3 id="confirm-anular-title">Anular cita</h3>
+      <button class="icon-btn" type="button" (click)="closeConfirmAnular()"
+              [disabled]="confirmAnularLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="confirm-body">
+      <p>¿Deseas anular esta cita? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="confirm-foot">
+      <button class="btn ghost" type="button" (click)="closeConfirmAnular()" [disabled]="confirmAnularLoading">
+        Cancelar
+      </button>
+      <button class="btn danger" type="button" (click)="confirmAnularProceed()" [disabled]="confirmAnularLoading">
+        {{ confirmAnularLoading ? 'Anulando...' : 'Anular' }}
+      </button>
+    </div>
+  </div>
+
+</div>

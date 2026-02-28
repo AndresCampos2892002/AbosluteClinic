@@ -1,0 +1,898 @@
+/* src/app/modules/citas/citas.component.scss */
+@use '../../shared/ui/actions/styless_actions.scss' as *;
+@use '../../shared/ui/responsive/table-mobile.scss' as *;
+
+/* Reutiliza tokens / estilo base de Users */
+@import '../users/users.component.scss';
+
+:host { display: block; }
+
+/* =========================
+   Base
+========================= */
+.page {
+  padding: 18px 20px 26px;
+  display: grid;
+  gap: 14px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+
+  h1 { margin: 0; font-size: 22px; letter-spacing: -0.02em; line-height: 1.2; }
+
+  .sub { margin: 6px 0 0; font-size: 12px; opacity: 0.78; }
+
+  .right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+}
+
+/* Botones */
+.btn { border-radius: 12px; }
+.btn.ghost   { background: rgba(255,255,255,.65); border: 1px solid rgba(15,23,42,.12); }
+.btn.primary { box-shadow: 0 12px 26px rgba(37,99,235,.18); }
+
+/* =========================
+   Cards
+========================= */
+.card {
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 14px;
+  box-shadow:
+    0 10px 30px rgba(15,23,42,.06),
+    0 2px 10px rgba(15,23,42,.04);
+  overflow: hidden;
+}
+
+/* =========================
+   Filtros colapsables
+========================= */
+.filters-card {
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+}
+
+.filters-summary {
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+
+  .sum-left {
+    display: grid;
+    gap: 6px;
+
+    h2 { margin: 0; font-size: 13px; opacity: .9; letter-spacing: .02em; }
+
+    .sum-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .pill {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(15,23,42,.10);
+        background: rgba(15,23,42,.04);
+        font-size: 12px;
+        opacity: .9;
+
+        b { font-weight: 600; }
+      }
+    }
+  }
+
+  .sum-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+
+    .hint { font-size: 12px; opacity: .7; }
+
+    .caret {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.90);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+
+      &::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid rgba(15,23,42,.55);
+        border-bottom: 2px solid rgba(15,23,42,.55);
+        transform: rotate(45deg);
+        transition: transform .18s ease;
+      }
+    }
+  }
+}
+
+.filters-card[open] .filters-summary .caret::before {
+  transform: rotate(225deg);
+}
+
+.filters {
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(15,23,42,.08);
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  label { font-size: 11px; opacity: .75; margin-bottom: 6px; display: block; }
+
+  .field { display: grid; gap: 6px; min-width: 160px; }
+  .field.grow { flex: 1; min-width: 240px; }
+
+  select, input {
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(15,23,42,.12);
+    background: rgba(255,255,255,.90);
+    outline: none;
+
+    &:focus {
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+  }
+}
+
+/* =========================
+   Layout principal
+   FIX: minmax(min, max) — min debe ser <= max
+========================= */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 520px) 1fr; // antes: 280 - 420
+  gap: 14px;
+  align-items: start;
+}
+
+/* =========================
+   Calendario mensual
+========================= */
+.calendar-card {
+  .calendar-head {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    .title {
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .01em;
+      text-transform: capitalize;
+      opacity: .92;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        border: 1px solid rgba(15,23,42,.12);
+        background: rgba(255,255,255,.90);
+        cursor: pointer;
+
+        &:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15,23,42,.08); }
+        &:active { transform: translateY(0); }
+      }
+    }
+  }
+
+  .month-weekdays {
+    padding: 0 14px 8px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+
+    .wd { font-size: 11px; opacity: .6; text-transform: uppercase; letter-spacing: .08em; padding: 4px 8px; }
+  }
+
+  .month-grid {
+    padding: 0 14px 14px;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mday {
+    border: 1px solid rgba(15,23,42,.10);
+    border-radius: 14px;
+    padding: 10px 10px 9px;
+    cursor: pointer;
+    background:
+      radial-gradient(900px 400px at 10% 0%, rgba(37,99,235,.08), transparent 55%),
+      rgba(255,255,255,.86);
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    display: grid;
+    gap: 8px;
+    min-height: 78px;
+    text-align: left;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(15,23,42,.10);
+      border-color: rgba(37,99,235,.25);
+
+      .add { opacity: 1; transform: translateY(0); }
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+
+      .num { font-size: 16px; font-weight: 600; line-height: 1; }
+
+      .add {
+        width: 26px;
+        height: 26px;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,.12);
+        background: rgba(255,255,255,.92);
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(2px);
+        transition: opacity .14s ease, transform .14s ease;
+
+        &:hover { box-shadow: 0 10px 18px rgba(15,23,42,.08); }
+      }
+    }
+
+    .mini {
+      margin-top: auto;
+      display: flex;
+      justify-content: flex-start;
+
+      .count {
+        min-width: 24px;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(37,99,235,.30);
+        background: rgba(37,99,235,.10);
+      }
+    }
+
+    &.outside { opacity: .45; background: rgba(255,255,255,.78); }
+    &.today   { border-color: rgba(37,99,235,.40); }
+    &.selected {
+      border-color: rgba(37,99,235,.70);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+  }
+
+  .calendar-foot {
+    padding: 0 14px 14px;
+    font-size: 12px;
+    opacity: .65;
+  }
+}
+
+/* =========================
+   Agenda del día
+========================= */
+.agenda-card {
+  .agenda-head {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid rgba(15,23,42,.08);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+
+    h2 { margin: 0; font-size: 13px; opacity: .9; }
+
+    .right-date {
+      margin-top: 4px;
+      font-size: 12px;
+      opacity: .75;
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+
+    .count-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.04);
+      font-size: 12px;
+      font-weight: 600;
+      opacity: .9;
+      white-space: nowrap;
+    }
+  }
+
+  .agenda-list {
+    padding: 12px 14px 14px;
+    display: grid;
+    gap: 10px;
+  }
+
+  /* Item de agenda */
+  .appt {
+    position: relative;
+    border: 1px solid rgba(15,23,42,.10);
+    border-radius: 14px;
+    background:
+      radial-gradient(900px 400px at 10% 0%, rgba(37,99,235,.06), transparent 55%),
+      rgba(255,255,255,.92);
+    padding: 12px;
+    padding-right: 54px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    text-align: left;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+
+    &:hover {
+      border-color: rgba(37,99,235,.22);
+      box-shadow: 0 14px 26px rgba(15,23,42,.08);
+      transform: translateY(-1px);
+    }
+    &:active { transform: translateY(0); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.18);
+      border-color: rgba(37,99,235,.45);
+    }
+
+    .time {
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(15,23,42,.04);
+      border: 1px solid rgba(15,23,42,.08);
+      text-align: center;
+
+      .h { font-weight: 600; font-size: 13px; line-height: 1.15; }
+      .m { font-size: 11px; opacity: .75; }
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 14px;
+      row-gap: 6px;
+      align-items: center;
+    }
+
+    .main .line1 {
+      grid-column: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+
+      .name { font-weight: 600; white-space: nowrap; }
+      .dot  { opacity: .45; flex: 0 0 auto; }
+      .svc  { font-weight: 600; opacity: .9; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
+    .main .line2 {
+      grid-column: 1;
+      font-size: 12px;
+      opacity: .75;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .main .tags {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-self: center;
+    }
+
+    .appt-menu {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(15,23,42,.10);
+    }
+
+    &.menu-open {
+      border-color: rgba(37,99,235,.28);
+      box-shadow: 0 14px 26px rgba(15,23,42,.10);
+    }
+
+    .chev {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .35;
+      font-size: 18px;
+      font-weight: 600;
+      pointer-events: none;
+
+      &.open {
+        opacity: .6;
+        transform: translateY(-50%) rotate(90deg);
+      }
+    }
+  }
+
+  .empty { padding: 16px; text-align: center; opacity: .75; }
+
+  @media (max-width: 520px) {
+    .appt {
+      grid-template-columns: 92px 1fr;
+      padding-right: 44px;
+    }
+
+    .appt .main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    .appt .main .tags {
+      grid-column: 1;
+      grid-row: auto;
+      justify-content: flex-start;
+      margin-top: 2px;
+    }
+  }
+}
+
+/* =========================
+   Badges de estado
+========================= */
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(15,23,42,.04);
+  color: rgba(15,23,42,.85);
+}
+
+.st.pendiente    { background: rgba(245,158,11,.14);  border-color: rgba(245,158,11,.35); }
+.st.confirmada   { background: rgba(34,197,94,.14);   border-color: rgba(34,197,94,.35); }
+.st.terminada    { background: rgba(15,23,42,.12);    border-color: rgba(15,23,42,.22); }
+.st.cancelada    { background: rgba(239,68,68,.14);   border-color: rgba(239,68,68,.35); }
+.st.no_asistio   { background: rgba(148,163,184,.22); border-color: rgba(148,163,184,.35); }
+.st.reprogramada { background: rgba(14,165,233,.14);  border-color: rgba(14,165,233,.35); }
+
+/* =========================
+   Modal — diseño drawer en desktop,
+   centrado en móvil. CONSOLIDADO (sin duplicados).
+========================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 2000;
+}
+
+/* Confirm anular usa backdrop estándar pero centrado siempre */
+.confirm-backdrop {
+  z-index: 2100;
+}
+
+.modal {
+  width: min(920px, 100%);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(15,23,42,.10);
+  box-shadow: 0 30px 70px rgba(0,0,0,.22);
+  max-height: calc(100vh - 44px);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-head {
+  flex: 0 0 auto;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background:
+    radial-gradient(1200px 500px at 10% 0%, rgba(37,99,235,.10), transparent 60%),
+    radial-gradient(900px 500px at 90% 50%, rgba(99,102,241,.10), transparent 55%),
+    rgba(255,255,255,.92);
+
+  h3 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .muted { margin-top: 4px; font-size: 12px; opacity: .75; }
+
+  .btn.sm.ghost {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  padding: 16px 18px 12px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Drawer en desktop */
+@media (min-width: 980px) {
+  .modal-backdrop {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .modal {
+    width: min(560px, 100%);
+    height: calc(100vh - 32px);
+    border-radius: 18px;
+  }
+}
+
+/* Modal pequeño (crear paciente) siempre centrado */
+.modal.modal-sm {
+  width: min(560px, 100%);
+  height: auto;
+  max-height: calc(100vh - 44px);
+}
+
+@media (min-width: 980px) {
+  .modal-backdrop:has(.modal-sm) {
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+/* =========================
+   Form dentro del modal
+========================= */
+.modal-body form.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+  align-items: start;
+}
+
+.modal-body form.grid > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.modal-body form.grid .full { grid-column: 1 / -1; }
+
+.modal-body label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  opacity: .92;
+}
+
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.92);
+  outline: none;
+  font-size: 13px;
+  transition: border-color .14s ease, box-shadow .14s ease;
+
+  &:focus {
+    border-color: rgba(37,99,235,.45);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+  }
+}
+
+.modal-body textarea {
+  height: auto;
+  min-height: 108px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.modal-body .hint,
+.modal-body small.hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: .70;
+}
+
+.modal-body small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #e11d48;
+}
+
+/* =========================
+   Modal actions (footer del form)
+========================= */
+.modal-actions {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(15,23,42,.08);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+
+  .modal-msg,
+  .muted { grid-column: 1; min-width: 0; }
+
+  .btn { width: auto; min-width: 120px; }
+  .btn.primary { box-shadow: 0 14px 26px rgba(37,99,235,.18); }
+}
+
+@media (max-width: 520px) {
+  .modal-actions {
+    grid-template-columns: 1fr 1fr;
+
+    .modal-msg, .muted { grid-column: 1 / -1; }
+    .btn { width: 100%; min-width: 0; }
+  }
+}
+
+/* =========================
+   Paciente inline: select + "+"
+========================= */
+.field-inline {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  gap: 10px;
+  align-items: end;
+
+  .field { display: grid; gap: 6px; min-width: 0; }
+}
+
+.icon-add {
+  height: 42px;
+  width: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.92);
+  color: rgba(15,23,42,.92);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+
+  &:hover { transform: translateY(-1px); box-shadow: 0 12px 22px rgba(15,23,42,.10); border-color: rgba(37,99,235,.22); }
+  &:active { transform: translateY(0); }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,.14); border-color: rgba(37,99,235,.45); }
+}
+
+/* =========================
+   Quick actions (submenú cita)
+========================= */
+.quick-actions {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: rgba(15,23,42,.02);
+
+  .qbtn {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(15,23,42,.12);
+    background: rgba(255,255,255,.92);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+
+    &:hover { box-shadow: 0 10px 18px rgba(15,23,42,.08); transform: translateY(-1px); }
+    &:active { transform: translateY(0); }
+    &.ok     { border-color: rgba(34,197,94,.35);  background: rgba(34,197,94,.10); }
+    &.info   { border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.10); }
+    &.dark   { border-color: rgba(15,23,42,.22);   background: rgba(15,23,42,.08); }
+    &.danger { border-color: rgba(239,68,68,.35);  background: rgba(239,68,68,.10); }
+  }
+}
+
+/* =========================
+   Duración: select compacto
+========================= */
+.dur-select select { width: 100%; }
+
+/* =========================
+   Cobro al terminar cita
+========================= */
+.cancel-pay {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(15,23,42,.03);
+
+  .subq { font-size: 12px; font-weight: 900; opacity: .9; margin-bottom: 8px; display: block; }
+}
+
+.pay-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(15,23,42,.10);
+    background: rgba(255,255,255,.85);
+    cursor: pointer;
+    user-select: none;
+
+    input { width: 16px; height: 16px; }
+  }
+}
+
+/* =========================
+   Responsive
+========================= */
+/* =========================
+   Mobile calendar UX
+   - compacta los días
+   - evita que el mes empuje demasiado la agenda (scroll interno)
+   - en touch no hay hover: mostramos el "+"
+========================= */
+@media (max-width: 720px) {
+
+  .layout{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .calendar-card{
+
+    .calendar-head{
+      padding: 10px 12px;
+    }
+
+    .month-weekdays{
+      padding: 0 12px 6px;
+      gap: 6px;
+
+      .wd{
+        font-size: 10px;
+        padding: 3px 6px;
+        letter-spacing: .06em;
+      }
+    }
+
+    /* Clave: el calendario no “alarga” toda la pantalla */
+    .month-grid{
+      padding: 0 12px 12px;
+      gap: 6px;
+
+      max-height: 320px;         /* <-- ajusta: 280-380 según te guste */
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mday{
+      min-height: 58px;          /* más compacto */
+      padding: 8px 8px 7px;
+      border-radius: 12px;
+      gap: 6px;
+
+      .top{
+        .num{ font-size: 14px; }
+
+        /* En móvil no hay hover: deja el botón visible */
+        .add{
+          opacity: 1;
+          transform: none;
+          width: 28px;
+          height: 28px;
+          border-radius: 10px;
+        }
+      }
+
+      .mini .count{
+        height: 20px;
+        min-width: 22px;
+        padding: 0 7px;
+        font-size: 11px;
+      }
+    }
+
+    /* Opcional: para ahorrar espacio */
+    .calendar-foot{
+      display: none;
+    }
+  }
+}
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .modal-body form.grid { grid-template-columns: 1fr; }
+  .field-inline { grid-template-columns: 1fr 44px; }
+}
+
+@media (max-width: 520px) {
+  .page { padding: 14px 12px 18px; }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    .right { justify-content: flex-start; }
+  }
+
+  .calendar-card .month-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calendar-card .month-weekdays { display: none; }
+}

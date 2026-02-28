@@ -1,0 +1,14 @@
+/* src/app/modules/servicios/servicios.component.scss */
+@use '../../shared/ui/actions/styless_actions.scss' as *;
+@use '../../shared/ui/responsive/table-mobile.scss' as *;
+
+:host { display: block; }
+
+/* reutiliza mismos tokens y estilos */
+@import '../users/users.component.scss';
+
+/* extra para namecell */
+.namecell{
+  .n{ font-weight: 600; line-height: 1.1; }
+  .s{ font-size: 12px; color: rgba(15,23,42,.55); margin-top: 3px; }
+}

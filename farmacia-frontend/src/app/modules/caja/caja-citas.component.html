@@ -1,0 +1,354 @@
+<!-- src/app/modules/caja/caja-citas.component.html -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>Caja · Cobro de citas</h1>
+      <p class="sub">Selecciona una cita → cobra → registra el pago.</p>
+    </div>
+    <button class="btn ghost" type="button" (click)="cargarCitas()" [disabled]="loadingCitas || loadingCatalogos">
+      <span class="material-symbols-outlined">refresh</span> Recargar
+    </button>
+  </div>
+
+  <!-- ERROR -->
+  <div class="alert-error" *ngIf="errorMsg" role="alert">
+    {{ errorMsg }}
+    <button type="button" class="close-alert" (click)="errorMsg = ''">✕</button>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="card filters-card">
+    <div class="filters">
+
+      <!-- Sucursal — solo admin -->
+      <div class="f" *ngIf="esAdmin">
+        <label>Sucursal</label>
+        <select [value]="fSucursal" (change)="setSucursal($any($event.target).value)">
+          <option [value]="0">Todas</option>
+          <option *ngFor="let s of store.sucursales" [value]="s.idSucursal">{{ s.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="f">
+        <label>Desde</label>
+        <input type="date" [value]="desde" (change)="setDesde($any($event.target).value)" />
+      </div>
+      <div class="f">
+        <label>Hasta</label>
+        <input type="date" [value]="hasta" (change)="setHasta($any($event.target).value)" />
+      </div>
+      <div class="f">
+        <button class="btn primary sm" type="button" (click)="aplicarRango()" [disabled]="loadingCitas">
+          Aplicar
+        </button>
+      </div>
+      <div class="f grow">
+        <label>Buscar</label>
+        <input [value]="q" (input)="onBuscar($any($event.target).value)"
+               placeholder="Paciente · teléfono · servicio · estado…" />
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID PRINCIPAL -->
+  <div class="grid">
+
+    <!-- ── LISTA DE CITAS ──────────────────────────────────────────────────── -->
+    <div class="card list-card">
+      <div class="card-head">
+        <h2>Citas</h2>
+        <span class="badge" *ngIf="!loadingCitas">{{ filteredCitas.length }}</span>
+        <span class="muted sm" *ngIf="loadingCitas">Cargando…</span>
+      </div>
+
+      <!-- Skeleton -->
+      <div class="skeleton" *ngIf="loadingCitas || loadingCatalogos">
+        <div class="sk-row" *ngFor="let _ of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <!-- Lista -->
+      <div class="list-wrap" *ngIf="!loadingCitas && !loadingCatalogos">
+        <button type="button" class="cita"
+                *ngFor="let c of filteredCitas"
+                (click)="selectCita(c)"
+                [class.active]="selected?.id_cita === c.id_cita">
+
+          <!-- Dot de estado de pago -->
+          <div class="pago-dot"
+               [class.dot-pend]="!c.estadoPago || c.estadoPago === 'PENDIENTE'"
+               [class.dot-parc]="c.estadoPago === 'PARCIAL'"
+               [class.dot-ok]="c.estadoPago === 'PAGADO'">
+          </div>
+
+          <div class="cita-body">
+            <div class="c-top">
+              <span class="c-name">{{ c.paciente_nombre }}</span>
+              <span class="c-time">{{ c.fecha_inicio | date:'dd/MM · HH:mm' }}</span>
+            </div>
+            <div class="c-mid">
+              <span class="chip">{{ c.servicio_nombre }}</span>
+              <span class="chip ghost">{{ c.estado }}</span>
+            </div>
+            <div class="c-foot">
+              <span class="muted" *ngIf="c.paciente_tel">{{ c.paciente_tel }}</span>
+              <span class="muted" *ngIf="c.especialista_nombre"> · {{ c.especialista_nombre }}</span>
+              <span class="muted" *ngIf="esAdmin && fSucursal === 0"> · {{ c.sucursal_nombre }}</span>
+            </div>
+          </div>
+        </button>
+
+        <div class="empty" *ngIf="filteredCitas.length === 0">
+          <span class="material-symbols-outlined">event_busy</span>
+          <p>No hay citas en el rango seleccionado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL DE COBRO ──────────────────────────────────────────────────── -->
+    <div class="card detail-card">
+
+      <!-- Sin selección -->
+      <div class="no-select" *ngIf="!selected">
+        <span class="material-symbols-outlined no-icon">point_of_sale</span>
+        <div class="no-title">Selecciona una cita</div>
+        <p class="muted">Elige una cita de la lista para cargar su cobro.</p>
+      </div>
+
+      <!-- Con selección -->
+      <div *ngIf="selected">
+
+        <!-- Encabezado del paciente -->
+        <div class="cobro-header">
+          <div>
+            <div class="cobro-paciente">{{ selected.paciente_nombre }}</div>
+            <div class="cobro-sub muted sm">
+              Cita #{{ selected.id_cita }} ·
+              {{ selected.fecha_inicio | date:'dd/MM/yyyy HH:mm' }} ·
+              {{ selected.servicio_nombre }}
+              <ng-container *ngIf="selected.especialista_nombre">
+                · {{ selected.especialista_nombre }}
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Acciones PDF (solo cuando hay cobro cargado) -->
+          <div class="pdf-actions" *ngIf="canPdf">
+            <button class="btn ghost sm icon-only" title="Imprimir" (click)="imprimirPdf()">
+              <span class="material-symbols-outlined">print</span>
+            </button>
+            <button class="btn ghost sm icon-only" title="Descargar PDF" (click)="descargarPdf()">
+              <span class="material-symbols-outlined">download</span>
+            </button>
+            <button class="btn ghost sm icon-only" title="WhatsApp"
+                    [disabled]="!selected.paciente_tel" (click)="enviarWhatsApp()">
+              <span class="material-symbols-outlined">chat</span>
+            </button>
+            <button class="btn ghost sm icon-only" title="Correo"
+                    [disabled]="!selected.paciente_correo" (click)="enviarCorreo()">
+              <span class="material-symbols-outlined">mail</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Skeleton cobro -->
+        <div class="skeleton" *ngIf="loadingCobro">
+          <div class="sk-big"></div>
+          <div class="sk-row"></div><div class="sk-row"></div>
+        </div>
+
+        <!-- Cobro cargado -->
+        <ng-container *ngIf="!loadingCobro && cobro as cb">
+
+          <!-- ── 1. RESUMEN ───────────────────────────────────────────────── -->
+          <div class="resume">
+            <div class="rbox">
+              <div class="lbl">Total</div>
+              <div class="val">{{ money(cb.total, cb.moneda) }}</div>
+            </div>
+            <div class="rbox">
+              <div class="lbl">Pagado</div>
+              <div class="val green">{{ money(cb.pagado, cb.moneda) }}</div>
+            </div>
+            <div class="rbox">
+              <div class="lbl">Saldo</div>
+              <div class="val strong">{{ money(cb.saldo, cb.moneda) }}</div>
+            </div>
+            <div class="rbox">
+              <div class="lbl">Estado</div>
+              <div class="val">
+                <span class="pill"
+                  [class.pill-ok]="cb.estadoPago === 'PAGADO'"
+                  [class.pill-warn]="cb.estadoPago === 'PARCIAL'"
+                  [class.pill-pend]="cb.estadoPago === 'PENDIENTE'">
+                  {{ cb.estadoPago }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Banner pagado -->
+          <div class="banner-paid" *ngIf="estaBloquedo()">
+            <span class="material-symbols-outlined">check_circle</span>
+            Cobro completamente pagado. Puedes imprimir o enviar el recibo.
+          </div>
+
+          <!-- ── 2. REGISTRAR PAGO ─────────────────────────────────────── -->
+          <div class="section" *ngIf="!estaBloquedo()">
+            <div class="section-head">
+              <h3>Registrar pago</h3>
+              <button class="btn sm ghost" type="button"
+                      [disabled]="cb.saldo <= 0" (click)="pagarSaldo()">
+                Pagar saldo completo
+              </button>
+            </div>
+
+            <form class="pay-form" [formGroup]="pagoForm" (ngSubmit)="pagar()">
+              <div class="f">
+                <label>Monto</label>
+                <input type="number" min="0.01" step="0.01"
+                       formControlName="monto" placeholder="0.00" />
+              </div>
+              <div class="f">
+                <label>Método</label>
+                <select formControlName="metodo">
+                  <option>EFECTIVO</option>
+                  <option>TARJETA</option>
+                  <option>TRANSFERENCIA</option>
+                  <option>OTRO</option>
+                </select>
+              </div>
+              <div class="f grow">
+                <label>Referencia</label>
+                <input formControlName="referencia"
+                       placeholder="Voucher, no. de transferencia… (opcional)" />
+              </div>
+              <div class="f">
+                <label>&nbsp;</label>
+                <button class="btn primary" type="submit"
+                        [disabled]="paying || pagoForm.invalid">
+                  {{ paying ? 'Procesando…' : 'Registrar pago' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ── 3. HISTORIAL DE PAGOS ────────────────────────────────── -->
+          <div class="section" *ngIf="pagos.length > 0">
+            <div class="section-head">
+              <h3>Historial de pagos</h3>
+              <span class="badge">{{ pagos.length }}</span>
+            </div>
+            <div class="pay-list">
+              <div class="pay-row" *ngFor="let p of pagos">
+                <div class="p-left">
+                  <div class="p-top">
+                    <span class="chip">{{ p.metodo }}</span>
+                    <span class="muted sm">{{ fmtDateTime(p.fecha) }}</span>
+                  </div>
+                  <div class="muted sm" *ngIf="p.referencia">Ref: {{ p.referencia }}</div>
+                </div>
+                <div class="p-amt green">{{ money(p.monto, cb.moneda) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 4. SERVICIOS (expandible) ───────────────────────────── -->
+          <div class="section section-toggle-wrap">
+            <button class="expand-btn" type="button"
+                    (click)="serviciosExpanded = !serviciosExpanded">
+              <span class="material-symbols-outlined">
+                {{ serviciosExpanded ? 'expand_less' : 'expand_more' }}
+              </span>
+              <h3>Servicios a cobrar</h3>
+              <span class="badge" *ngIf="items.length > 0">{{ items.length }}</span>
+              <span class="muted sm expand-hint" *ngIf="!serviciosExpanded && items.length > 0">
+                · {{ money(totalItems(), cb.moneda) }}
+              </span>
+            </button>
+
+            <div class="expand-body" *ngIf="serviciosExpanded"
+                 [class.section-locked]="estaBloquedo()">
+
+              <div class="section-actions" *ngIf="!estaBloquedo()">
+                <button class="btn sm ghost" type="button"
+                        [disabled]="savingCobro" (click)="guardarCobro()">
+                  {{ savingCobro ? 'Guardando…' : 'Guardar cambios' }}
+                </button>
+              </div>
+
+              <!-- Tabla de items -->
+              <div class="table" *ngIf="items.length > 0">
+                <div class="tr th">
+                  <div>Servicio</div>
+                  <div class="r">Cant.</div>
+                  <div class="r">P/U</div>
+                  <div class="r">Subtotal</div>
+                  <div></div>
+                </div>
+                <div class="tr" *ngFor="let it of items; let i = index">
+                  <div class="name">{{ it.nombre || 'Servicio #' + it.idServicio }}</div>
+                  <div class="r">
+                    <input class="mini-in" type="number" min="1" [value]="it.cantidad"
+                           [disabled]="estaBloquedo()"
+                           (change)="onItemCantidad(i, $any($event.target).value)" />
+                  </div>
+                  <div class="r">
+                    <input class="mini-in" type="number" min="0" step="0.01"
+                           [value]="it.precioUnitario" [disabled]="estaBloquedo()"
+                           (change)="onItemPrecio(i, $any($event.target).value)" />
+                  </div>
+                  <div class="r subtotal">{{ money(it.subtotal, cb.moneda) }}</div>
+                  <div class="r">
+                    <button class="link danger" type="button"
+                            [disabled]="estaBloquedo()" (click)="removeItem(i)">✕</button>
+                  </div>
+                </div>
+                <div class="tr total-row">
+                  <div class="muted">Total</div>
+                  <div></div><div></div>
+                  <div class="r strong">{{ money(totalItems(), cb.moneda) }}</div>
+                  <div></div>
+                </div>
+              </div>
+
+              <div class="empty-items" *ngIf="items.length === 0">Sin servicios. Agrega uno abajo.</div>
+
+              <!-- Agregar servicio — usa el catálogo del store -->
+              <div class="inline-add" *ngIf="!estaBloquedo()">
+                <div class="f grow">
+                  <label>Servicio</label>
+                  <select [formControl]="$any(itemAddForm.get('idServicio'))">
+                    <option [ngValue]="null">Seleccionar…</option>
+                    <option *ngFor="let s of store.servicios" [ngValue]="s.idServicio">
+                      {{ s.nombre }}
+                    </option>
+                  </select>
+                </div>
+                <div class="f short">
+                  <label>Cant.</label>
+                  <input type="number" min="1"
+                         [formControl]="$any(itemAddForm.get('cantidad'))" />
+                </div>
+                <div class="f">
+                  <label>&nbsp;</label>
+                  <button class="btn sm primary" type="button"
+                          (click)="addServicio()" [disabled]="itemAddForm.invalid">
+                    Agregar
+                  </button>
+                </div>
+              </div>
+
+              <p class="hint muted" *ngIf="!estaBloquedo()">
+                Ajusta el precio (P/U) si el cobro real es distinto al precio del catálogo.
+              </p>
+            </div>
+          </div>
+
+        </ng-container>
+      </div>
+    </div>
+
+  </div>
+</div>

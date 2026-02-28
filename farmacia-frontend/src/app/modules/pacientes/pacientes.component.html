@@ -1,0 +1,488 @@
+<!-- src/app/modules/pacientes/pacientes.component.html -->
+<div class="page">
+
+  <!-- Cabecera -->
+  <div class="header">
+    <div class="title"><h1>Pacientes</h1></div>
+    <div class="actions">
+      <button class="btn primary btn-icon" type="button" (click)="openCreate()" data-tooltip="Añadir" aria-label="Nuevo paciente">
+        <img class="i" src="assets/icons/icon_add.svg" alt="Nuevo paciente">
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de filtros -->
+  <div class="toolbar">
+    <div class="search">
+      <input
+        type="text"
+        placeholder="Buscar por nombre, teléfono, correo, NIT o DPI..."
+        [(ngModel)]="q"
+        (ngModelChange)="aplicarFiltro(true)"
+      />
+    </div>
+
+    <label class="toggle">
+      <input type="checkbox" [(ngModel)]="includeInactivos" (change)="onToggleInactivos()" />
+      <span>Incluir inactivos</span>
+    </label>
+
+    <div class="meta">
+      <span class="pill" *ngIf="!loading">{{ pacientes.length }} registros</span>
+    </div>
+  </div>
+
+  <!-- Card principal -->
+  <div class="card">
+
+    <!-- DESKTOP: tabla -->
+    <div class="table-wrap desktop-only">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>NIT</th>
+            <th>DPI</th>
+            <th>Sucursal</th>
+            <th>Creado por</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="!loading && view.length === 0">
+            <td colspan="9" class="empty">No hay resultados</td>
+          </tr>
+
+          <tr *ngFor="let p of view">
+            <td>
+              <div class="usercell">
+                <div class="usertext">
+                  <div class="u">{{ pacienteLabel(p) }}</div>
+                  <div class="s">{{ p.direccion || '—' }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="muted">{{ p.telefono || '—' }}</td>
+            <td class="muted">{{ p.correo   || '—' }}</td>
+            <td class="muted">{{ p.nit      || '—' }}</td>
+            <td class="muted">{{ p.dpi      || '—' }}</td>
+            <td class="muted">{{ p.sucursalNombre || (p.idSucursalCreado ? ('#' + p.idSucursalCreado) : '—') }}</td>
+            <td class="muted">{{ p.creadoPorNombre || (p.creadoPor ? ('#' + p.creadoPor) : '—') }}</td>
+            <td>
+              <span class="badge" [class.ok]="p.activo" [class.off]="!p.activo">
+                {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+            <td class="actions-col">
+              <button class="icon-action" type="button" (click)="openExpediente(p)"
+                      aria-label="Ver expediente" data-tooltip="Expediente">
+                <img src="assets/icons/icon_folder.svg" alt="Expediente">
+              </button>
+
+              <button class="icon-action" type="button" (click)="openEdit(p)"
+                      aria-label="Editar paciente" data-tooltip="Editar">
+                <img src="assets/icons/icon_edit.svg" alt="Editar">
+              </button>
+
+              <button *ngIf="p.activo" class="icon-action danger" type="button"
+                      (click)="openConfirm(p, 'inactivar')"
+                      aria-label="Inactivar paciente" data-tooltip="Inactivar">
+                <img src="assets/icons/icon_delete.svg" alt="Inactivar">
+              </button>
+
+              <button *ngIf="!p.activo" class="icon-action ok" type="button"
+                      (click)="openConfirm(p, 'reactivar')"
+                      aria-label="Reactivar paciente" data-tooltip="Reactivar">
+                <img src="assets/icons/icon_refresh.svg" alt="Reactivar">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOVIL: cards -->
+    <div class="mobile-cards mobile-only">
+      <div class="empty" *ngIf="!loading && view.length === 0">No hay resultados</div>
+
+      <div class="u-card" *ngFor="let p of view">
+        <div class="u-top">
+          <div class="avatar">{{ (pacienteLabel(p) || '?').slice(0,1).toUpperCase() }}</div>
+          <div class="u-main">
+            <div class="u-name">{{ pacienteLabel(p) }}</div>
+            <div class="u-mail">{{ p.correo || '—' }}</div>
+            <div class="u-badges">
+              <span class="badge" [class.ok]="p.activo" [class.off]="!p.activo">
+                {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </div>
+          </div>
+          <div class="u-id mono">#{{ p.idPaciente }}</div>
+        </div>
+
+        <div class="u-mid">
+          <div class="u-row"><span class="k">Teléfono</span><span class="v">{{ p.telefono || '—' }}</span></div>
+          <div class="u-row"><span class="k">NIT</span><span class="v">{{ p.nit || '—' }}</span></div>
+          <div class="u-row"><span class="k">DPI</span><span class="v">{{ p.dpi || '—' }}</span></div>
+          <div class="u-row"><span class="k">Sucursal</span><span class="v">{{ p.sucursalNombre || '—' }}</span></div>
+          <div class="u-row"><span class="k">Creado por</span><span class="v">{{ p.creadoPorNombre || '—' }}</span></div>
+          <div class="u-row"><span class="k">Dirección</span><span class="v">{{ p.direccion || '—' }}</span></div>
+        </div>
+
+        <div class="u-actions">
+          <button class="btn ghost"  type="button" (click)="openExpediente(p)">Expediente</button>
+          <button class="btn ghost"  type="button" (click)="openEdit(p)">Editar</button>
+          <button class="btn danger" type="button" (click)="openConfirm(p, 'inactivar')" *ngIf="p.activo">Inactivar</button>
+          <button class="btn ok"     type="button" (click)="openConfirm(p, 'reactivar')" *ngIf="!p.activo">Reactivar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pager">
+      <button class="btn ghost" type="button" [disabled]="page === 1" (click)="prev()" aria-label="Página anterior">&#8592;</button>
+      <span class="pager-info">Página <b>{{ page }}</b> de <b>{{ totalPages }}</b></span>
+      <button class="btn ghost" type="button" [disabled]="page === totalPages" (click)="next()" aria-label="Página siguiente">&#8594;</button>
+
+      <div class="page-size">
+        <span>Filas:</span>
+        <select [(ngModel)]="pageSize" (change)="aplicarFiltro(true)">
+          <option [ngValue]="5">5</option>
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal crear / editar -->
+  <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeModal()" aria-hidden="true"></div>
+  <div class="modal" *ngIf="modalOpen" role="dialog" aria-modal="true" aria-labelledby="modal-pac-title">
+    <div class="modal-header">
+      <h2 id="modal-pac-title">{{ modalMode === 'create' ? 'Nuevo paciente' : 'Editar paciente' }}</h2>
+      <button class="icon-btn" type="button" (click)="closeModal()" [disabled]="saving" aria-label="Cerrar">&#10005;</button>
+    </div>
+
+    <form class="modal-body form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+
+        <div class="field">
+          <label for="p-nombres">Nombres <b class="req">*</b></label>
+          <input id="p-nombres" type="text" formControlName="nombres"
+                 placeholder="Ej: Andres" autocomplete="given-name" />
+          <small *ngIf="isInvalid('nombres') && form.get('nombres')?.errors?.['required']">Nombres es requerido.</small>
+          <small *ngIf="isInvalid('nombres') && form.get('nombres')?.errors?.['maxlength']">Máximo 120 caracteres.</small>
+        </div>
+
+        <div class="field">
+          <label for="p-apellidos">Apellidos <b class="req">*</b></label>
+          <input id="p-apellidos" type="text" formControlName="apellidos"
+                 placeholder="Ej: Campos" autocomplete="family-name" />
+          <small *ngIf="isInvalid('apellidos') && form.get('apellidos')?.errors?.['required']">Apellidos es requerido.</small>
+          <small *ngIf="isInvalid('apellidos') && form.get('apellidos')?.errors?.['maxlength']">Máximo 120 caracteres.</small>
+        </div>
+
+        <div class="field">
+          <label for="p-telefono">Teléfono <b class="req">*</b></label>
+          <input id="p-telefono" type="tel" formControlName="telefono"
+                 placeholder="8 dígitos" maxlength="8" inputmode="numeric" autocomplete="tel" />
+          <small *ngIf="isInvalid('telefono') && form.get('telefono')?.errors?.['required']">Teléfono es requerido.</small>
+          <small *ngIf="isInvalid('telefono') && form.get('telefono')?.errors?.['exactDigits']">Teléfono debe tener exactamente 8 dígitos.</small>
+        </div>
+
+        <div class="field">
+          <label for="p-correo">Correo</label>
+          <input id="p-correo" type="email" formControlName="correo"
+                 placeholder="ejemplo@gmail.com" autocomplete="email" />
+          <small *ngIf="isInvalid('correo') && form.get('correo')?.errors?.['email']">Ingresa un correo válido (ej: nombre@gmail.com).</small>
+          <small *ngIf="isInvalid('correo') && form.get('correo')?.errors?.['maxlength']">Máximo 180 caracteres.</small>
+        </div>
+
+        <div class="field">
+          <label for="p-nit">NIT</label>
+          <input id="p-nit" type="text" formControlName="nit"
+                 placeholder="CF / 548966559" maxlength="30" autocomplete="off" />
+          <small *ngIf="isInvalid('nit') && form.get('nit')?.errors?.['nitInvalid']">NIT inválido. Usa CF o solo dígitos.</small>
+          <small *ngIf="isInvalid('nit') && form.get('nit')?.errors?.['maxlength']">Máximo 30 caracteres.</small>
+        </div>
+
+        <div class="field">
+          <label for="p-dpi">DPI</label>
+          <input id="p-dpi" type="text" formControlName="dpi"
+                 placeholder="13 dígitos" maxlength="13" inputmode="numeric" autocomplete="off" />
+          <small *ngIf="isInvalid('dpi') && form.get('dpi')?.errors?.['exactDigits']">DPI debe tener exactamente 13 dígitos.</small>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="p-direccion">Dirección</label>
+          <input id="p-direccion" type="text" formControlName="direccion"
+                 placeholder="Huehuetenango, zona 1, 3ra calle..." maxlength="180" autocomplete="street-address" />
+          <small *ngIf="isInvalid('direccion') && form.get('direccion')?.errors?.['maxlength']">Máximo 180 caracteres.</small>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn ghost" type="button" (click)="closeModal()" [disabled]="saving">Cancelar</button>
+        <button class="btn primary" type="submit"
+                [disabled]="saving || form.invalid || (modalMode === 'edit' && !hasChanges())">
+          {{ saving ? 'Guardando...' : (modalMode === 'create' ? 'Crear' : 'Guardar cambios') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Confirm inactivar / reactivar -->
+  <div class="modal-backdrop" *ngIf="confirmOpen" (click)="closeConfirm()" aria-hidden="true"></div>
+  <div class="confirm" *ngIf="confirmOpen" role="dialog" aria-modal="true" aria-labelledby="confirm-pac-title">
+    <div class="confirm-head">
+      <h3 id="confirm-pac-title">{{ confirmTitle }}</h3>
+      <button class="icon-btn" type="button" (click)="closeConfirm()" [disabled]="confirmLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="confirm-body"><p>{{ confirmMsg }}</p></div>
+    <div class="confirm-foot">
+      <button class="btn ghost" type="button" (click)="closeConfirm()" [disabled]="confirmLoading">Cancelar</button>
+      <button class="btn" [ngClass]="confirmKind === 'danger' ? 'danger' : 'ok'" type="button"
+              (click)="confirmProceed()" [disabled]="confirmLoading">
+        {{ confirmLoading ? 'Procesando...' : (confirmAction === 'inactivar' ? 'Inactivar' : 'Reactivar') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Expediente -->
+  <div class="modal-backdrop" *ngIf="expedienteOpen" (click)="closeExpediente()" aria-hidden="true"></div>
+  <div class="modal modal-xl" *ngIf="expedienteOpen" role="dialog" aria-modal="true" aria-labelledby="exp-title">
+    <div class="modal-header">
+      <h2 id="exp-title">Expediente</h2>
+      <div class="exp-head-right">
+        <span class="pill" *ngIf="expedienteLoading">Cargando...</span>
+        <button class="icon-btn" type="button" (click)="closeExpediente()" [disabled]="archivoUploading" aria-label="Cerrar">&#10005;</button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="exp-meta" *ngIf="expedientePacienteLabel">
+        <b>{{ expedientePacienteLabel }}</b>
+      </div>
+
+      <div class="muted" *ngIf="expedienteMsg">{{ expedienteMsg }}</div>
+
+      <!-- Acciones rápidas (TABs simples) -->
+      <div class="exp-subbar" style="display:flex; gap:8px; align-items:center; margin:10px 0" *ngIf="!expedienteLoading">
+        <button type="button" class="btn ghost sm" (click)="volverACitas()" [disabled]="expedienteTab==='CITAS'">Citas</button>
+        <button type="button" class="btn ghost sm" (click)="verTodosLosArchivos()" [disabled]="expedienteTab==='ARCHIVOS'">Archivos</button>
+
+        <span class="pill" *ngIf="expedienteTab==='ARCHIVOS' && archivosFiltroCitaId != null">
+          Filtrado: {{ archivosFiltroCitaLabel }}
+        </span>
+
+        <button *ngIf="expedienteTab==='ARCHIVOS' && archivosFiltroCitaId != null"
+                type="button" class="btn ghost sm"
+                (click)="verTodosLosArchivos()">
+          Ver todos
+        </button>
+      </div>
+
+      <!-- TAB: CITAS -->
+      <div *ngIf="!expedienteLoading && expedienteTab === 'CITAS'">
+        <div class="card" *ngIf="expediente?.citas?.length; else noCitas">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Sucursal</th>
+                  <th>Servicio</th>
+                  <th>Especialista</th>
+                  <th>Estado</th>
+                  <th>Notas</th>
+                  <th class="th-actions">Archivos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of expediente!.citas">
+                  <td>{{ fmtDate(c.fechaInicio) }}</td>
+                  <td class="muted">{{ c.sucursalNombre     || ('#' + c.idSucursal) }}</td>
+                  <td class="muted">{{ c.servicioNombre     || ('#' + c.idServicio) }}</td>
+                  <td class="muted">{{ c.especialistaNombre || (c.idEspecialista != null ? ('#' + c.idEspecialista) : '—') }}</td>
+                  <td><span class="badge">{{ c.estado }}</span></td>
+                  <td class="muted" style="max-width:520px">
+                    <span *ngIf="c.motivo"><b>Motivo:</b> {{ c.motivo }} </span>
+                    <span *ngIf="c.notas"><b>Notas:</b> {{ c.notas }}</span>
+                    <span *ngIf="!c.motivo && !c.notas">—</span>
+                  </td>
+
+                  <td class="actions-col cita-actions sticky-actions">
+                    <!-- (el input se suele ocultar por CSS) -->
+                    <input type="file" #fileCita
+                           accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt,application/pdf,image/*"
+                           (change)="onCitaArchivoSelected(c.idCita, $event)" />
+
+                    <button class="icon-action" type="button" data-tooltip="Subir archivo"
+                            aria-label="Subir archivo" (click)="fileCita.click()">
+                      <img src="assets/icons/icon_add_archive.svg" alt="Subir">
+                    </button>
+
+                    <button class="icon-action" type="button" data-tooltip="Ver archivos"
+                            aria-label="Ver archivos de cita" (click)="verArchivosDeCita(c.idCita)">
+                      <img src="assets/icons/icon_folder.svg" alt="Ver archivos">
+                    </button>
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <ng-template #noCitas>
+          <div class="empty" style="padding:12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <span>Sin citas registradas.</span>
+            <!-- ✅ Importante: permitir ir a Archivos aunque NO haya citas -->
+            <button type="button" class="btn ghost sm" (click)="verTodosLosArchivos()">Ir a archivos</button>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- TAB: ARCHIVOS -->
+      <div *ngIf="!expedienteLoading && expedienteTab === 'ARCHIVOS'">
+
+        <!-- Subir archivo -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="upload-grid" [formGroup]="archivoForm">
+
+            <!-- Mensaje de archivo (validación) -->
+            <div class="muted" *ngIf="archivoMsg" style="grid-column: 1 / -1;">
+              {{ archivoMsg }}
+            </div>
+
+            <div class="field file-field">
+              <label>Archivo</label>
+              <div class="filepicker">
+                <input #fileUp type="file" class="file-input"
+                       accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt,application/pdf,image/*"
+                       (change)="onArchivoSelected($event)" />
+                <button type="button" class="btn ghost file-btn" (click)="fileUp.click()">Seleccionar archivo</button>
+
+                <div class="file-chip" *ngIf="archivoFileName">
+                  <span class="file-name">{{ archivoFileName }}</span>
+                  <button type="button" class="file-x" (click)="clearArchivoSelected(fileUp)" aria-label="Quitar archivo">&#10005;</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="arc-titulo">Descripción</label>
+              <input id="arc-titulo" type="text" formControlName="titulo" placeholder="(opcional)" />
+              <small *ngIf="isArchivoInvalid('titulo') && archivoForm.get('titulo')?.errors?.['maxlength']">Máximo 140 caracteres.</small>
+            </div>
+
+            <div class="field">
+              <label for="arc-tipo">Tipo</label>
+              <select id="arc-tipo" formControlName="tipo">
+                <option value="DOCUMENTO">Documento</option>
+                <option value="LAB">Laboratorio</option>
+                <option value="RX">Rayos X</option>
+                <option value="FOTO">Foto</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+
+            <!-- NUEVO: asociar a cita o “Sin cita” -->
+            <div class="field">
+              <label for="arc-cita">Relacionado a cita</label>
+              <select id="arc-cita" formControlName="idCita" [disabled]="archivosFiltroCitaId != null">
+                <option [ngValue]="null">Sin cita</option>
+                <option *ngFor="let c of (expediente?.citas || [])" [ngValue]="c.idCita">
+                  {{ fmtDate(c.fechaInicio) }}
+                  · {{ c.servicioNombre || ('#' + c.idServicio) }}
+                  · {{ c.sucursalNombre || ('#' + c.idSucursal) }}
+                </option>
+              </select>
+              
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn primary" type="button" (click)="subirArchivo()"
+                      [disabled]="archivoUploading || !archivoFile || archivoForm.invalid">
+                {{ archivoUploading ? 'Subiendo...' : 'Subir' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de archivos -->
+        <div class="card" *ngIf="archivosView.length; else noArchivos">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha de subida</th>
+                  <th>Tipo</th>
+                  <th>Título</th>
+                  <th>Archivo</th>
+                  <th class="th-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of archivosView">
+                  <td>{{ fmtDate(a.creadoEn) }}</td>
+                  <td>{{ a.tipo }}</td>
+                  <td>{{ a.titulo || '—' }}</td>
+                  <td>
+                    <div class="namecell">
+                      <div class="n">{{ a.filename }}</div>
+                      <div class="s">
+                        <span *ngIf="a.sizeBytes">{{ formatBytes(a.sizeBytes) }}</span>
+                        <span *ngIf="!a.activo"> &middot; ANULADO</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="actions-col">
+                    <button class="icon-action" type="button" data-tooltip="Descargar"
+                            aria-label="Descargar archivo" (click)="descargarArchivo(a)">
+                      <img src="assets/icons/icon_download.svg" alt="Descargar">
+                    </button>
+                    <button *ngIf="a.activo" class="icon-action danger" type="button"
+                            data-tooltip="Eliminar" aria-label="Eliminar archivo"
+                            (click)="openConfirmAnularArchivo(a)">
+                      <img src="assets/icons/icon_delete.svg" alt="Eliminar">
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <ng-template #noArchivos>
+          <div class="empty" style="padding:12px">
+            {{ archivosFiltroCitaId != null ? 'No hay archivos para esta cita.' : 'Aún no hay archivos.' }}
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm anular archivo -->
+  <div class="modal-backdrop" *ngIf="confirmArchivoOpen" (click)="closeConfirmArchivo()" aria-hidden="true"></div>
+  <div class="confirm" *ngIf="confirmArchivoOpen" role="dialog" aria-modal="true" aria-labelledby="confirm-arc-title">
+    <div class="confirm-head">
+      <h3 id="confirm-arc-title">Eliminar archivo</h3>
+      <button class="icon-btn" type="button" (click)="closeConfirmArchivo()" [disabled]="confirmArchivoLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="confirm-body"><p>{{ confirmArchivoMsg }}</p></div>
+    <div class="confirm-foot">
+      <button class="btn ghost" type="button" (click)="closeConfirmArchivo()" [disabled]="confirmArchivoLoading">Cancelar</button>
+      <button class="btn danger" type="button" (click)="confirmAnularArchivoProceed()" [disabled]="confirmArchivoLoading">
+        {{ confirmArchivoLoading ? 'Eliminando...' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+
+</div>

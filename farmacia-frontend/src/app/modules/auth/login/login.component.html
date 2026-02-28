@@ -1,0 +1,145 @@
+<div class="login-page">
+
+  <!-- Fondo -->
+  <div class="bg-image"         aria-hidden="true"></div>
+  <div class="bg-video-overlay" aria-hidden="true"></div>
+
+  <!-- Contenido principal -->
+  <main class="content">
+    <section class="auth-wrap">
+
+      <!-- IZQUIERDA: marca -->
+      <div class="auth-left">
+        <div class="brand-block">
+          <img
+            class="brand-logo"
+            src="assets/brand/absolute-blanco-logo.png"
+            alt="Absolute"
+          />
+          <p class="brand-tagline">
+            Gestiona citas, pacientes y cobros desde un solo panel para tu clínica.
+          </p>
+        </div>
+      </div>
+
+      <!-- DERECHA: card de login -->
+      <div class="auth-right">
+        <div class="auth-card">
+          <form
+            class="form"
+            [formGroup]="form"
+            (ngSubmit)="onSubmit()"
+            novalidate
+            autocomplete="on"
+          >
+
+            <!-- Campo: usuario -->
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">person</span>
+                <input
+                  id="usuario"
+                  type="text"
+                  formControlName="usuario"
+                  placeholder="Correo electrónico o usuario"
+                  autocomplete="username"
+                  aria-label="Usuario"
+                  [attr.aria-invalid]="usuarioCtrl?.touched && usuarioCtrl?.invalid"
+                />
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="usuarioCtrl?.touched && usuarioCtrl?.invalid">
+                Ingresa tu usuario.
+              </p>
+            </div>
+
+            <!-- Campo: contraseña -->
+            <div class="field">
+              <div class="control">
+                <span class="material-symbols-outlined control-icon" aria-hidden="true">lock</span>
+                <input
+                  id="contrasena"
+                  [type]="showPassword ? 'text' : 'password'"
+                  formControlName="contrasena"
+                  placeholder="Contraseña"
+                  autocomplete="current-password"
+                  aria-label="Contraseña"
+                  [attr.aria-invalid]="contrasenaCtrl?.touched && contrasenaCtrl?.invalid"
+                />
+                <button
+                  class="eye"
+                  type="button"
+                  (click)="togglePassword()"
+                  [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    {{ showPassword ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+              </div>
+              <p class="hint error" role="alert"
+                 *ngIf="contrasenaCtrl?.touched && contrasenaCtrl?.invalid">
+                Ingresa tu contraseña.
+              </p>
+            </div>
+
+            <!-- Error de servidor -->
+            <div class="server-error" role="alert" aria-live="assertive"
+                 *ngIf="errorMsg">
+              {{ errorMsg }}
+            </div>
+
+            <!-- Boton submit -->
+            <button
+              class="btn-primary btn-arrow"
+              type="submit"
+              [disabled]="loading || form.invalid"
+              [class.is-loading]="loading"
+              aria-label="Iniciar sesion"
+            >
+              <span class="btn-label"   *ngIf="!loading">Iniciar sesión</span>
+              <span class="btn-loading" *ngIf="loading" aria-live="polite">
+                <span class="spinner" aria-hidden="true"></span>
+              </span>
+            </button>
+
+            <!-- Olvido contrasena -->
+            <a class="forgot-link" [routerLink]="['/auth/olvido-contra']">
+              ¿Olvidaste tu contraseña?
+            </a>
+
+            <!-- Divider -->
+            <div class="divider" aria-hidden="true"></div>
+
+            <!-- Soporte -->
+            <a
+              class="support-link"
+              href="https://wa.me/50233355691?text=Necesito%20Soporte"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Contacta a soporte
+            </a>
+
+          </form>
+        </div>
+
+        <p class="auth-footnote"></p>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 Absolute Systems. Todos los derechos reservados.</p>
+    <p>V 0.1</p>
+    <div class="footer-links"></div>
+    <img
+      class="footer-logo"
+      src="assets/brand/absolute-blanco-logo.png"
+      alt="Absolute Systems"
+    />
+  </footer>
+
+</div>

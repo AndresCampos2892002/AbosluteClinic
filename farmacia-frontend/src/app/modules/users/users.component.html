@@ -1,0 +1,320 @@
+<!-- src/app/modules/users/users.component.html -->
+<div class="page">
+
+  <!-- Cabecera -->
+  <div class="header">
+    <div class="title">
+      <h1>Usuarios</h1>
+    </div>
+    <div class="actions">
+      <button class="btn primary btn-icon" type="button" (click)="openCreate()" data-tooltip="Añadir">
+        <img class="i" src="assets/icons/icon_add.svg" alt="Nuevo usuario">
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de filtros -->
+  <div class="toolbar">
+    <div class="search">
+      <input
+        type="text"
+        placeholder="Buscar por usuario, correo, rol, nombre, teléfono..."
+        [(ngModel)]="q"
+        (ngModelChange)="aplicarFiltro()"
+      />
+    </div>
+
+    <label class="toggle">
+      <input type="checkbox" [(ngModel)]="includeInactivos" (change)="onToggleInactivos()" />
+      <span>Incluir inactivos</span>
+    </label>
+
+    <div class="meta">
+      <span class="pill" *ngIf="!loading">{{ users.length }} registros</span>
+    </div>
+  </div>
+
+  <!-- Card principal -->
+  <div class="card">
+
+    <!-- DESKTOP: tabla -->
+    <div class="table-wrap desktop-only">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Actualizado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngIf="!loading && view.length === 0">
+            <td colspan="9" class="empty">No hay resultados</td>
+          </tr>
+
+          <tr *ngFor="let u of view">
+            <td class="mono">{{ u.idUsuario }}</td>
+
+            <td>
+              <div class="usercell">
+                <div class="usertext">
+                  <div class="u">{{ u.usuario }}</div>
+                  <div class="s">{{ u.correo }}</div>
+                </div>
+              </div>
+            </td>
+
+            <td><span class="badge role">{{ u.rol }}</span></td>
+            <td>{{ (u.nombre || '') + ' ' + (u.apellido || '') }}</td>
+            <td class="muted">{{ u.telefono || '—' }}</td>
+
+            <td>
+              <span class="badge" [class.ok]="u.estado" [class.off]="!u.estado">
+                {{ u.estado ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+
+            <td class="muted">{{ fmtDate(u.creadoEn) }}</td>
+            <td class="muted">{{ fmtDate(u.actualizadoEn) }}</td>
+
+            <td class="actions-col">
+              <button
+                class="icon-action"
+                type="button"
+                (click)="openEdit(u)"
+                aria-label="Editar usuario"
+                data-tooltip="Editar"
+              >
+                <img src="assets/icons/icon_edit.svg" alt="Editar">
+              </button>
+
+              <button
+                *ngIf="u.estado"
+                class="icon-action danger"
+                type="button"
+                (click)="openConfirmAnular(u)"
+                aria-label="Inactivar usuario"
+                data-tooltip="Inactivar"
+              >
+                <img src="assets/icons/icon_delete.svg" alt="Inactivar">
+              </button>
+
+              <button
+                *ngIf="!u.estado"
+                class="icon-action ok"
+                type="button"
+                (click)="openConfirmReactivar(u)"
+                aria-label="Reactivar usuario"
+                data-tooltip="Reactivar"
+              >
+                <img src="assets/icons/icon_refresh.svg" alt="Reactivar">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOVIL: cards -->
+    <div class="mobile-cards mobile-only">
+
+      <div class="empty" *ngIf="!loading && view.length === 0">
+        No hay resultados
+      </div>
+
+      <div class="u-card" *ngFor="let u of view">
+        <div class="u-top">
+          <div class="avatar">{{ (u.usuario || '?').slice(0,1).toUpperCase() }}</div>
+
+          <div class="u-main">
+            <div class="u-name">{{ u.usuario }}</div>
+            <div class="u-mail">{{ u.correo }}</div>
+            <div class="u-badges">
+              <span class="badge role">{{ u.rol }}</span>
+              <span class="badge" [class.ok]="u.estado" [class.off]="!u.estado">
+                {{ u.estado ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="u-id mono">#{{ u.idUsuario }}</div>
+        </div>
+
+        <div class="u-mid">
+          <div class="u-row">
+            <span class="k">Nombre</span>
+            <span class="v">{{ (u.nombre || '') + ' ' + (u.apellido || '') }}</span>
+          </div>
+          <div class="u-row">
+            <span class="k">Teléfono</span>
+            <span class="v">{{ u.telefono || '—' }}</span>
+          </div>
+          <div class="u-row">
+            <span class="k">Creado</span>
+            <span class="v">{{ fmtDate(u.creadoEn) }}</span>
+          </div>
+          <div class="u-row">
+            <span class="k">Actualizado</span>
+            <span class="v">{{ fmtDate(u.actualizadoEn) }}</span>
+          </div>
+        </div>
+
+        <div class="u-actions">
+          <button class="btn ghost" type="button" (click)="openEdit(u)">Editar</button>
+          <button *ngIf="u.estado"  class="btn danger" type="button" (click)="openConfirmAnular(u)">Inactivar</button>
+          <button *ngIf="!u.estado" class="btn ok"     type="button" (click)="openConfirmReactivar(u)">Reactivar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pager">
+      <button class="btn ghost" type="button" [disabled]="page === 1" (click)="goPage(page - 1)"
+              aria-label="Página anterior">&#8592;</button>
+
+      <span class="pager-info">
+        Página <b>{{ page }}</b> de <b>{{ totalPages }}</b>
+      </span>
+
+      <button class="btn ghost" type="button" [disabled]="page === totalPages" (click)="goPage(page + 1)"
+              aria-label="Página siguiente">&#8594;</button>
+
+      <div class="page-size">
+        <span>Filas:</span>
+        <select [(ngModel)]="pageSize" (change)="aplicarFiltro()">
+          <option [ngValue]="5">5</option>
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal crear / editar -->
+  <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeModal()" aria-hidden="true"></div>
+
+  <div class="modal" *ngIf="modalOpen" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 id="modal-title">{{ modalMode === 'create' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+      <button class="icon-btn" type="button" (click)="closeModal()" [disabled]="saving" aria-label="Cerrar">&#10005;</button>
+    </div>
+
+    <form class="modal-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+
+        <div class="field">
+          <label for="f-usuario">Usuario</label>
+          <input id="f-usuario" type="text" formControlName="usuario" placeholder="usuario" />
+          <small *ngIf="form.get('usuario')?.touched && form.get('usuario')?.invalid">Requerido</small>
+        </div>
+
+        <div class="field">
+          <label for="f-correo">Correo</label>
+          <input id="f-correo" type="email" formControlName="correo" placeholder="correo@dominio.com" />
+          <small *ngIf="form.get('correo')?.touched && form.get('correo')?.invalid">Correo válido requerido</small>
+        </div>
+
+        <div class="field">
+          <label for="f-rol">Rol</label>
+          <select id="f-rol" formControlName="rol">
+            <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+
+        <!-- Especialidad solo si rol = ESPECIALISTA -->
+        <div class="field" *ngIf="form.get('rol')?.value === 'ESPECIALISTA'">
+          <label for="f-especialidad">Especialidad</label>
+          <input id="f-especialidad" type="text" formControlName="especialidad" placeholder="Fisioterapeuta" />
+          <small *ngIf="form.get('especialidad')?.touched && form.get('especialidad')?.invalid">Especialidad requerida</small>
+        </div>
+
+        <div class="field">
+          <label for="f-sucursal">Sucursal</label>
+          <select id="f-sucursal" formControlName="idSucursal">
+            <option [ngValue]="null" disabled>Selecciona...</option>
+            <option *ngFor="let s of sucursales" [ngValue]="s.idSucursal">{{ s.nombre }}</option>
+          </select>
+          <small *ngIf="form.get('idSucursal')?.touched && form.get('idSucursal')?.invalid">Sucursal requerida</small>
+        </div>
+
+        <div class="field">
+          <label for="f-nombre">Nombre</label>
+          <input id="f-nombre" type="text" formControlName="nombre" placeholder="Nombre" />
+        </div>
+
+        <div class="field">
+          <label for="f-apellido">Apellido</label>
+          <input id="f-apellido" type="text" formControlName="apellido" placeholder="Apellido" />
+        </div>
+
+        <div class="field">
+          <label for="f-telefono">Teléfono</label>
+          <input id="f-telefono" type="tel" formControlName="telefono"
+                 placeholder="Teléfono" maxlength="8" inputmode="numeric" />
+          <small *ngIf="form.get('telefono')?.touched && form.get('telefono')?.errors?.['pattern']">
+            Teléfono debe tener 8 dígitos
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="f-password">
+            Contraseña {{ modalMode === 'create' ? '(obligatoria)' : '(opcional)' }}
+          </label>
+          <input id="f-password" type="password" formControlName="password" placeholder="••••••••" />
+          <small *ngIf="modalMode === 'create' && form.get('password')?.touched && form.get('password')?.errors?.['required']">
+            Contraseña requerida
+          </small>
+          <small *ngIf="form.get('password')?.touched && form.get('password')?.errors?.['strong']">
+            Debe tener mínimo 8 caracteres, 1 mayúscula y 1 número
+          </small>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="closeModal()" [disabled]="saving">Cancelar</button>
+        <button type="submit" class="btn primary" [disabled]="saving">
+          {{ saving ? 'Guardando...' : (modalMode === 'create' ? 'Crear' : 'Guardar cambios') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal confirmación anular / reactivar -->
+  <div class="modal-backdrop" *ngIf="confirmOpen" (click)="closeConfirm()" aria-hidden="true"></div>
+
+  <div class="confirm" *ngIf="confirmOpen" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="confirm-head">
+      <h3 id="confirm-title">{{ confirmTitle }}</h3>
+      <button class="icon-btn" type="button" (click)="closeConfirm()" [disabled]="confirmLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+
+    <div class="confirm-body">
+      <p>{{ confirmMsg }}</p>
+    </div>
+
+    <div class="confirm-foot">
+      <button type="button" class="btn ghost" (click)="closeConfirm()" [disabled]="confirmLoading">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [ngClass]="confirmKind === 'danger' ? 'danger' : 'ok'"
+        (click)="confirmProceed()"
+        [disabled]="confirmLoading"
+      >
+        {{ confirmLoading ? 'Procesando...' : (confirmAction === 'anular' ? 'Inactivar' : 'Reactivar') }}
+      </button>
+    </div>
+  </div>
+
+</div>

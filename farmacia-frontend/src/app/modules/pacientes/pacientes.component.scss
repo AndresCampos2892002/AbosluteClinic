@@ -1,0 +1,291 @@
+/* src/app/modules/pacientes/pacientes.component.scss */
+@use '../../shared/ui/actions/styless_actions.scss' as *;
+@use '../../shared/ui/responsive/table-mobile.scss' as *;
+
+:host { display: block; }
+
+/* Reutiliza mismos tokens y estilos de Users */
+@import '../users/users.component.scss';
+
+/* extra para namecell (pacientes + archivos) */
+.namecell{
+  .n{ font-weight: 600; line-height: 1.1; }
+  .s{ font-size: 12px; color: rgba(15,23,42,.55); margin-top: 3px; }
+}
+
+
+/* =========================
+   Expediente (solo additions)
+========================= */
+
+/* modal ancho para expediente */
+.modal.modal-xl{
+  width: min(1100px, calc(100% - 28px));
+}
+
+.exp-head-right{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exp-meta{
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+/* acciones de archivos en tabla de citas */
+.cita-actions{
+  white-space: nowrap;
+
+  input[type="file"]{
+    display: none;
+  }
+}
+
+/* barra cuando filtramos archivos por cita */
+.exp-subbar{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 6px 0 12px;
+
+  .pill{ margin-right: 4px; }
+}
+
+/* upload layout */
+/* =========================
+   EXPEDIENTE - SUBIR ARCHIVO
+========================= */
+
+.upload-grid{
+  display: grid;
+  gap: 12px;
+  align-items: end;
+
+  /* 5 columnas: Archivo | Descripción | Tipo | Relacionado a cita | Botón */
+  grid-template-columns:
+    minmax(220px, 1.2fr)
+    minmax(180px, 1fr)
+    minmax(140px, .8fr)
+    minmax(260px, 1.4fr)
+    minmax(110px, auto);
+}
+
+/* CLAVE: permite que los items del grid SE ENCOJAN y no invadan la columna del botón */
+.upload-grid > .field{
+  min-width: 0;
+}
+
+/* inputs/select a 100% para que respeten la celda del grid */
+.upload-grid input,
+.upload-grid select{
+  width: 100%;
+  min-width: 0;
+}
+
+/* el mensaje debajo del select no debe empujar raro ni “invadir” */
+.upload-grid small{
+  display: block;
+  margin-top: 6px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* el botón “Subir” se alinea abajo y no se mete con el hint */
+.upload-grid > .field:last-child{
+  align-self: end;
+}
+.upload-grid > .field:last-child .btn{
+  width: 100%;
+}
+
+/* RESPONSIVE: cuando el modal se estrecha, que se acomode en 2 cols y luego 1 */
+@media (max-width: 980px){
+  .upload-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .upload-grid .file-field{
+    grid-column: 1 / -1;
+  }
+  .upload-grid > .field:last-child{
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px){
+  .upload-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Opcional: esconder inputs file de citas para que no afecten layout */
+.cita-actions input[type="file"],
+.file-input{
+  display: none;
+}
+
+/* ===== Upload: file input bonito + chip verde ===== */
+.filepicker{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.file-input{
+  display: none; /* ocultamos el input feo */
+}
+
+.file-btn{
+  height: 38px;
+  border-radius: 12px;
+  padding: 0 14px;
+}
+
+.file-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  background: rgba(34,197,94,.14);
+  border: 1px solid rgba(34,197,94,.35);
+  color: rgba(20,83,45,1);
+}
+
+.file-name{
+  font-size: 12.5px;
+  font-weight: 600;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-x{
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  border: 1px solid rgba(34,197,94,.45);
+  background: rgba(34,197,94,.12);
+}
+
+.file-x:hover{
+  filter: brightness(.96);
+}
+
+
+.req { color: #e11d48; font-weight: 700; }
+
+small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #e11d48;
+}
+
+.btn.is-disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+
+/* ===== Toast premium (Pacientes) ===== */
+.toast{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 14px;
+  border-radius: 14px;
+
+  /* deja el estilo base de users, pero mejoramos layout */
+}
+
+/* iconito circular (sin tocar HTML) */
+.toast::before{
+  content: "✓";
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 13px;
+
+  background: rgba(34,197,94,.14);
+  border: 1px solid rgba(34,197,94,.35);
+  color: rgba(22,163,74,1);
+}
+
+/* para error cambia a signo ! rojo */
+.toast.err::before{
+  content: "!";
+  background: rgba(239,68,68,.10);
+  border: 1px solid rgba(239,68,68,.30);
+  color: rgba(220,38,38,1);
+}
+
+
+/* el mensaje ocupa el centro */
+.toast{
+  justify-content: space-between;
+}
+.toast::before{
+  flex: 0 0 auto;
+}
+
+.toast .x{
+  margin-left: 12px;
+}
+
+/* Botón X bonito */
+.toast .x{
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(255,255,255,.9);
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 1;
+  opacity: .85;
+  transition: .15s ease;
+}
+
+.toast .x:hover{
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(2, 6, 23, .10);
+}
+
+.archivo-msg{
+  margin-top: .75rem;
+  padding: .65rem .85rem;
+  border-radius: 12px;
+  font-size: .92rem;
+  border: 1px solid transparent;
+}
+
+.archivo-msg.ok{
+  background: rgba(34,197,94,.10);
+  border-color: rgba(34,197,94,.22);
+  color: #166534;
+}
+
+.archivo-msg.err{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.22);
+  color: #991b1b;
+}
+
+
+
+

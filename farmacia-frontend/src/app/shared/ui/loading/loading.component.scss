@@ -1,0 +1,87 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 120px;
+}
+
+.loading.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 18, 32, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 18px 40px rgba(0,0,0,.35));
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.12);
+  border-top-color: rgba(19, 127, 236, 0.95); /* azul clínico */
+  border-radius: 999px;
+  animation: spin 0.95s linear infinite;
+}
+
+.center {
+  width: 72%;
+  height: 72%;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(15,23,42,.10);
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, .12),
+    inset 0 1px 0 rgba(255,255,255,.7);
+  overflow: hidden;
+}
+
+.logo {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  animation: pulse 1.25s ease-in-out infinite;
+  user-select: none;
+}
+
+.logo.dark-filter {
+  filter: brightness(0) saturate(100%); /* lo vuelve negro */
+  opacity: .95;
+}
+
+.text {
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: .2px;
+  color: rgba(15, 23, 42, 0.65);
+  background: rgba(255,255,255,.7);
+  border: 1px solid rgba(15,23,42,.08);
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.loading.fullscreen .text {
+  color: rgba(255,255,255,.88);
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.10);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(0.96); opacity: .92; }
+  50% { transform: scale(1.02); opacity: 1; }
+}

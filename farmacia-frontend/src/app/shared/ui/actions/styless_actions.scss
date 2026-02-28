@@ -1,0 +1,105 @@
+/* =========================
+   UI Actions 
+========================= */
+
+/* Tooltip global (igual al shell) */
+[data-tooltip]{
+  position: relative;
+}
+
+[data-tooltip]::after{
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%) translateY(6px);
+  white-space: nowrap;
+
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
+}
+
+[data-tooltip]::before{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+
+  border: 6px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.95);
+
+  opacity: 0;
+  transition: opacity .15s ease;
+  z-index: 9999;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Icon buttons reusables */
+.icon-action{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, .10);
+  background: rgba(255,255,255,.92);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: .15s ease;
+  padding: 0;
+
+  img{
+    width: 18px;
+    height: 18px;
+    opacity: .92;
+  }
+
+  &:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(2, 6, 23, .10);
+  }
+
+  &.danger{
+    border-color: rgba(239, 68, 68, .18);
+    background: rgba(239, 68, 68, .05);
+  }
+
+  &.ok{
+    border-color: rgba(34, 197, 94, .18);
+    background: rgba(34, 197, 94, .05);
+  }
+}
+
+/* Add button icon-only (tema shell) */
+.btn.primary.btn-icon{
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 14px;
+
+  background: linear-gradient(135deg, #21325c);
+  border-color: #21325c;
+  box-shadow: 0 10px 22px #e0e0e0;
+
+  .i{
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+  }
+}

@@ -1,0 +1,31 @@
+/* ===== RESET GLOBAL ABSOLUTO ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+
+  background: #0b1220;
+
+  overflow-x: hidden;
+  overflow-y: auto; /* ✅ permite scroll */
+  -webkit-overflow-scrolling: touch; /* ✅ iOS */
+}
+
+/* Angular root */
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #0b0b0b;
+}
+
+

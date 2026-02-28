@@ -1,0 +1,26 @@
+<!-- layout/shell/shell.component.html -->
+<div class="layout">
+  <!-- Backdrop móvil (cuando el drawer está abierto) -->
+  <div
+    class="mobile-overlay"
+    *ngIf="!collapsed"
+    (click)="closeSidebarOnMobile()">
+  </div>
+
+  <!-- SIDEBAR separado -->
+  <app-shell-sidebar
+    [collapsed]="collapsed"
+    (closeMobile)="closeSidebarOnMobile()">
+  </app-shell-sidebar>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR separado -->
+    <app-shell-topbar (menuClick)="toggleSidebar()"></app-shell-topbar>
+
+    <!-- Page -->
+    <div class="content" [@routeAnim]="getRouteKey()">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

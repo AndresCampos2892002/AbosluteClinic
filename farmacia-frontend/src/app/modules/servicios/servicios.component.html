@@ -1,0 +1,282 @@
+<!-- src/app/modules/servicios/servicios.component.html -->
+<div class="page">
+
+  <!-- Cabecera -->
+  <div class="header">
+    <div class="title"><h1>Servicios</h1></div>
+    <div class="actions">
+      <button class="btn primary btn-icon" type="button" (click)="openCreate()"
+              data-tooltip="Añadir" aria-label="Nuevo servicio">
+        <img class="i" src="assets/icons/icon_add.svg" alt="Nuevo servicio">
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de filtros -->
+  <div class="toolbar">
+    <div class="search">
+      <input
+        type="text"
+        placeholder="Buscar por nombre, descripción, precio..."
+        [(ngModel)]="q"
+        (ngModelChange)="aplicarFiltro()"
+      />
+    </div>
+    <label class="toggle">
+      <input type="checkbox" [(ngModel)]="includeInactivos" (change)="onToggleInactivos()" />
+      <span>Incluir inactivos</span>
+    </label>
+    <div class="meta">
+      <span class="pill" *ngIf="loading">Cargando...</span>
+      <span class="pill" *ngIf="!loading">{{ servicios.length }} registros</span>
+    </div>
+  </div>
+
+  <!-- Card principal -->
+  <div class="card">
+
+    <!-- DESKTOP: tabla -->
+    <div class="table-wrap desktop-only">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th class="text-end">Precio actual</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="!loading && view.length === 0">
+            <td colspan="4" class="empty">No hay resultados</td>
+          </tr>
+          <tr *ngFor="let s of view">
+            <td>
+              <div class="namecell">
+                <div class="n">{{ s.nombre }}</div>
+                <div class="s">{{ s.descripcion || '—' }}</div>
+              </div>
+            </td>
+            <td class="text-end mono">{{ money(s.precioActual, s.moneda) }}</td>
+            <td>
+              <span class="badge" [class.ok]="s.activo" [class.off]="!s.activo">
+                {{ s.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+            <td class="actions-col">
+              <button class="icon-action" type="button" (click)="openEdit(s)"
+                      aria-label="Editar servicio" data-tooltip="Editar">
+                <img src="assets/icons/icon_edit.svg" alt="Editar">
+              </button>
+              <button class="icon-action" type="button" (click)="openPrecio(s)"
+                      aria-label="Cambiar precio" data-tooltip="Cambiar precio">
+                <img src="assets/icons/icon_money.svg" alt="Precio">
+              </button>
+              <button class="icon-action" type="button" (click)="openHistorial(s)"
+                      aria-label="Ver historial de precios" data-tooltip="Historial">
+                <img src="assets/icons/icon_history.svg" alt="Historial">
+              </button>
+              <button *ngIf="s.activo" class="icon-action danger" type="button"
+                      (click)="openConfirmInactivar(s)"
+                      aria-label="Inactivar servicio" data-tooltip="Inactivar">
+                <img src="assets/icons/icon_delete.svg" alt="Inactivar">
+              </button>
+              <button *ngIf="!s.activo" class="icon-action ok" type="button"
+                      (click)="openConfirmReactivar(s)"
+                      aria-label="Reactivar servicio" data-tooltip="Reactivar">
+                <img src="assets/icons/icon_refresh.svg" alt="Reactivar">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOVIL: cards -->
+    <div class="mobile-cards mobile-only">
+      <div class="empty" *ngIf="!loading && view.length === 0">No hay resultados</div>
+      <div class="u-card" *ngFor="let s of view">
+        <div class="u-top">
+          <div class="avatar">{{ (s.nombre || 'S').slice(0,1).toUpperCase() }}</div>
+          <div class="u-main">
+            <div class="u-name">{{ s.nombre }}</div>
+            <div class="u-mail">{{ s.descripcion || '—' }}</div>
+            <div class="u-badges">
+              <span class="badge role">{{ (s.moneda || 'GTQ') }} {{ (s.precioActual ?? 0) | number:'1.2-2' }}</span>
+              <span class="badge" [class.ok]="s.activo" [class.off]="!s.activo">
+                {{ s.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </div>
+          </div>
+          <div class="u-id">#{{ s.idServicio }}</div>
+        </div>
+        <div class="u-mid">
+          <div class="u-row"><span class="k">Precio</span><span class="v">{{ money(s.precioActual, s.moneda) }}</span></div>
+          <div class="u-row"><span class="k">Creado</span><span class="v">{{ fmtDate(s.creadoEn) }}</span></div>
+          <div class="u-row"><span class="k">Actualizado</span><span class="v">{{ fmtDate(s.actualizadoEn) }}</span></div>
+        </div>
+        <div class="u-actions">
+          <button class="btn ghost"  type="button" (click)="openEdit(s)">Editar</button>
+          <button class="btn ghost"  type="button" (click)="openPrecio(s)">Precio</button>
+          <button class="btn ghost"  type="button" (click)="openHistorial(s)">Historial</button>
+          <button class="btn danger" type="button" (click)="openConfirmInactivar(s)" *ngIf="s.activo">Inactivar</button>
+          <button class="btn ok"     type="button" (click)="openConfirmReactivar(s)" *ngIf="!s.activo">Reactivar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pager">
+      <button class="btn ghost" type="button" [disabled]="page === 1" (click)="goPage(page - 1)" aria-label="Página anterior">&#8592;</button>
+      <span class="pager-info">Página <b>{{ page }}</b> de <b>{{ totalPages }}</b></span>
+      <button class="btn ghost" type="button" [disabled]="page === totalPages" (click)="goPage(page + 1)" aria-label="Página siguiente">&#8594;</button>
+      <div class="page-size">
+        <span>Filas:</span>
+        <select [(ngModel)]="pageSize" (change)="aplicarFiltro()">
+          <option [ngValue]="5">5</option>
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal crear / editar -->
+  <div class="modal-backdrop" *ngIf="modalOpen" (click)="closeModal()" aria-hidden="true"></div>
+  <div class="modal" *ngIf="modalOpen" role="dialog" aria-modal="true" aria-labelledby="modal-svc-title">
+    <div class="modal-header">
+      <h2 id="modal-svc-title">{{ modalMode === 'create' ? 'Nuevo servicio' : 'Editar servicio' }}</h2>
+      <button class="icon-btn" type="button" (click)="closeModal()" [disabled]="saving" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <form class="modal-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+
+        <div class="field">
+          <label for="svc-nombre">Nombre</label>
+          <input id="svc-nombre" type="text" formControlName="nombre" placeholder="Ej: Consulta general" />
+          <small *ngIf="form.get('nombre')?.touched && form.get('nombre')?.invalid">Requerido</small>
+        </div>
+
+        <div class="field">
+          <label for="svc-descripcion">Descripción</label>
+          <input id="svc-descripcion" type="text" formControlName="descripcion" placeholder="Opcional" />
+        </div>
+
+        <div class="field" *ngIf="modalMode === 'create'">
+          <label for="svc-precio">Precio inicial (opcional)</label>
+          <input id="svc-precio" type="number" formControlName="precioInicial"
+                 placeholder="0.00" inputmode="decimal" />
+        </div>
+
+        <div class="field" *ngIf="modalMode === 'create'">
+          <label for="svc-moneda">Moneda</label>
+          <select id="svc-moneda" formControlName="moneda">
+            <option value="GTQ">GTQ</option>
+          </select>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="closeModal()" [disabled]="saving">Cancelar</button>
+        <button type="submit" class="btn primary" [disabled]="!canSubmitModal">
+          {{ saving ? 'Guardando...' : (modalMode === 'create' ? 'Crear' : (editHasChanges() ? 'Guardar cambios' : 'Sin cambios')) }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal cambiar precio -->
+  <div class="modal-backdrop" *ngIf="priceOpen" (click)="closePrecio()" aria-hidden="true"></div>
+  <div class="modal" *ngIf="priceOpen" role="dialog" aria-modal="true" aria-labelledby="modal-price-title">
+    <div class="modal-header">
+      <h2 id="modal-price-title">Cambiar precio</h2>
+      <button class="icon-btn" type="button" (click)="closePrecio()" [disabled]="priceSaving" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <form class="modal-body" [formGroup]="priceForm" (ngSubmit)="savePrecio()" novalidate>
+      <div class="hint" *ngIf="priceServicio as s">
+        <b>{{ s.nombre }}</b>
+        <span>Precio actual: <span class="mono">{{ money(s.precioActual, s.moneda) }}</span></span>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="price-valor">Nuevo precio</label>
+          <input id="price-valor" type="number" formControlName="precio"
+                 placeholder="0.00" inputmode="decimal" />
+          <small *ngIf="priceForm.get('precio')?.touched && priceForm.get('precio')?.invalid">
+            Precio válido requerido
+          </small>
+        </div>
+        <div class="field">
+          <label for="price-moneda">Moneda</label>
+          <select id="price-moneda" formControlName="moneda">
+            <option value="GTQ">GTQ</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="closePrecio()" [disabled]="priceSaving">Cancelar</button>
+        <button type="submit" class="btn primary" [disabled]="!canSubmitPrecio">
+          {{ priceSaving ? 'Guardando...' : (priceHasChanges() ? 'Guardar precio' : 'Sin cambios') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal historial -->
+  <div class="modal-backdrop" *ngIf="histOpen" (click)="closeHistorial()" aria-hidden="true"></div>
+  <div class="modal" *ngIf="histOpen" role="dialog" aria-modal="true" aria-labelledby="modal-hist-title">
+    <div class="modal-header">
+      <h2 id="modal-hist-title">Historial de precios</h2>
+      <button class="icon-btn" type="button" (click)="closeHistorial()" [disabled]="histLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="hint" *ngIf="histServicio as s">
+        <b>{{ s.nombre }}</b>
+        <span>Precio actual: <span class="mono">{{ money(s.precioActual, s.moneda) }}</span></span>
+      </div>
+      <div class="pill" *ngIf="histLoading">Cargando...</div>
+      <div class="hist" *ngIf="!histLoading">
+        <div class="empty" *ngIf="hist.length === 0">Sin historial aún</div>
+        <table class="hist-table" *ngIf="hist.length > 0">
+          <thead>
+            <tr>
+              <th>Precio</th>
+              <th>Desde</th>
+              <th>Hasta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of hist">
+              <td class="mono">{{ money(h.precio, h.moneda) }}</td>
+              <td class="muted">{{ fmtDate(h.vigenteDesde) }}</td>
+              <td class="muted">{{ h.vigenteHasta ? fmtDate(h.vigenteHasta) : 'VIGENTE' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="closeHistorial()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm inactivar / reactivar -->
+  <div class="modal-backdrop" *ngIf="confirmOpen" (click)="closeConfirm()" aria-hidden="true"></div>
+  <div class="confirm" *ngIf="confirmOpen" role="dialog" aria-modal="true" aria-labelledby="confirm-svc-title">
+    <div class="confirm-head">
+      <h3 id="confirm-svc-title">{{ confirmTitle }}</h3>
+      <button class="icon-btn" type="button" (click)="closeConfirm()" [disabled]="confirmLoading" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="confirm-body"><p>{{ confirmMsg }}</p></div>
+    <div class="confirm-foot">
+      <button type="button" class="btn ghost" (click)="closeConfirm()" [disabled]="confirmLoading">Cancelar</button>
+      <button type="button" class="btn" [ngClass]="confirmKind === 'danger' ? 'danger' : 'ok'"
+              (click)="confirmProceed()" [disabled]="confirmLoading">
+        {{ confirmLoading ? 'Procesando...' : (confirmAction === 'inactivar' ? 'Inactivar' : 'Reactivar') }}
+      </button>
+    </div>
+  </div>
+
+</div>

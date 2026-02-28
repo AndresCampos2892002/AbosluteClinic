@@ -1,0 +1,92 @@
+<!-- layout/shell/sidebar/shell-sidebar.component.html -->
+<aside class="sidebar" [class.is-collapsed]="collapsed">
+  <!-- Brand -->
+  <div class="side-brand">
+    <img class="side-logo" src="assets/brand/absolute-blanco-logo.png" alt="Absolute" />
+    <div class="side-title">
+      <div class="name">Absolute</div>
+      <div class="tag">Panel</div>
+    </div>
+  </div>
+
+  <!-- Menú -->
+  <nav class="side-nav">
+    <div class="nav-section">MENÚ</div>
+
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" data-tooltip="Inicio" (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_dashboard_admin_blanco.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Inicio</span>
+    </a>
+
+    <a *ngIf="isSuperAdmin()"
+       routerLink="/users" routerLinkActive="active" class="nav-item" data-tooltip="Usuarios"
+       (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_users_admin_blanco.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Usuarios</span>
+    </a>
+
+    <a *ngIf="canSeePacientes()"
+       routerLink="/pacientes" routerLinkActive="active" class="nav-item" data-tooltip="Pacientes"
+       (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_patient.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Pacientes</span>
+    </a>
+
+    <a *ngIf="canSeeServicios()"
+       routerLink="/servicios" routerLinkActive="active" class="nav-item" data-tooltip="Servicios"
+       (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_service.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Servicios</span>
+    </a>
+
+    <a *ngIf="canSeeServicios()"
+       routerLink="/citas" routerLinkActive="active" class="nav-item" data-tooltip="Citas"
+       (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_calendar.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Citas</span>
+    </a>
+
+    <a *ngIf="canSeeServicios()"
+       routerLink="/caja" routerLinkActive="active" class="nav-item" data-tooltip="Caja"
+       (click)="closeIfMobile()">
+      <img class="nav-icon" src="assets/icons/icon_payment.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Caja</span>
+    </a>
+  </nav>
+
+  <!-- Footer usuario -->
+  <div class="side-footer" *ngIf="user as u">
+    <button class="logout" type="button" (click)="openLogoutModal()" data-tooltip="Cerrar sesión">
+      <img class="nav-icon" src="assets/icons/icon_logout_blanco.svg" alt="" aria-hidden="true" />
+      <span class="nav-text">Salir</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MODAL: Confirmar logout -->
+<div class="modal-backdrop" *ngIf="showLogoutModal" (click)="cancelLogout()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <ng-container *ngIf="!loggingOut; else loggingTpl">
+      <div class="modal-title">¿Deseas cerrar sesión?</div>
+      <div class="modal-desc">Se cerrará tu sesión actual y volverás al login.</div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="cancelLogout()">Cancelar</button>
+        <button type="button" class="btn-danger" (click)="confirmLogout()">Sí, salir</button>
+      </div>
+    </ng-container>
+
+    <ng-template #loggingTpl>
+      <div class="modal-loading">
+        <app-loading
+          [fullscreen]="false"
+          text="Cerrando sesión…"
+          [size]="54"
+          [stroke]="5"
+          logoSrc="assets/brand/absolute-blanco-logo.png"
+          [logoDarkFilter]="false"
+        />
+      </div>
+    </ng-template>
+  </div>
+</div>

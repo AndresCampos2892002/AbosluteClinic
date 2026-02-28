@@ -1,0 +1,242 @@
+<!-- layout/shell/topbar/shell-topbar.component.html -->
+<header class="topbar">
+  <button class="icon-btn" type="button" aria-label="Abrir menú de navegación" (click)="onMenuClick()">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+
+  <div class="top-right" *ngIf="user as u">
+
+    <!-- NOTIFICACIONES -->
+    <div class="notif-wrap">
+      <button
+        class="icon-btn"
+        type="button"
+        aria-label="Notificaciones"
+        [attr.aria-expanded]="notifOpen"
+        (click)="toggleNotif($event)"
+      >
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="notif-badge" *ngIf="unread > 0" aria-hidden="true">{{ unread }}</span>
+      </button>
+
+      <div
+        class="notif-menu"
+        *ngIf="notifOpen"
+        role="menu"
+        aria-label="Panel de notificaciones"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="notif-head">
+          <div class="notif-title">Notificaciones</div>
+          <button class="mini" type="button" *ngIf="unread > 0" (click)="markAllRead($event)">
+            Marcar todas
+          </button>
+        </div>
+
+        <div class="notif-loading" *ngIf="notifLoading">Cargando...</div>
+
+        <div class="notif-empty" *ngIf="!notifLoading && notifs.length === 0">
+          Sin notificaciones nuevas
+        </div>
+
+        <button
+          class="notif-item"
+          type="button"
+          role="menuitem"
+          *ngFor="let n of notifs"
+          (click)="markRead(n, $event)"
+          [attr.aria-label]="n.titulo"
+        >
+          <div class="n-top">
+            <span class="chip">{{ tipoLabel(n.tipo) }}</span>
+            <span class="time">{{ n.creadoEn | date:'short' }}</span>
+          </div>
+          <div class="n1">{{ n.titulo }}</div>
+          <div class="n2">{{ n.mensaje }}</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div
+      class="profile"
+      role="button"
+      tabindex="0"
+      [attr.aria-expanded]="profileMenuOpen"
+      aria-label="Menú de perfil"
+      (click)="toggleProfileMenu($event)"
+      (keydown.enter)="profileMenuOpen = !profileMenuOpen"
+      (keydown.space)="profileMenuOpen = !profileMenuOpen; $event.preventDefault()"
+    >
+      <div class="p-avatar" aria-hidden="true">{{ initials }}</div>
+      <div class="p-name">{{ displayName }}</div>
+      <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+    </div>
+
+    <!-- Dropdown perfil -->
+    <div
+      class="profile-menu"
+      *ngIf="profileMenuOpen"
+      role="menu"
+      aria-label="Opciones de perfil"
+      (click)="$event.stopPropagation()"
+    >
+      <button type="button" class="pm-item" role="menuitem" (click)="openSettings('perfil')">
+        <span class="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+        <span>Mi perfil</span>
+      </button>
+
+      <button type="button" class="pm-item" role="menuitem" (click)="openSettings('password')">
+        <span class="material-symbols-outlined" aria-hidden="true">lock_reset</span>
+        <span>Cambiar contrasena</span>
+      </button>
+
+      <button type="button" class="pm-item" role="menuitem" (click)="openSettings('soporte')">
+        <span class="material-symbols-outlined" aria-hidden="true">support_agent</span>
+        <span>Contactar soporte</span>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<!-- Backdrop ajustes -->
+<div
+  class="settings-backdrop"
+  *ngIf="settingsOpen"
+  aria-hidden="true"
+  (click)="closeSettings()"
+></div>
+
+<!-- Modal ajustes -->
+<div
+  class="settings-modal"
+  *ngIf="settingsOpen"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="settings-title"
+  (click)="$event.stopPropagation()"
+>
+  <div class="settings-head">
+    <div class="sh-title">
+      <div class="t1" id="settings-title">Ajustes</div>
+      <div class="t2">{{ displayName }}</div>
+    </div>
+    <button class="icon-btn" type="button" aria-label="Cerrar ajustes" (click)="closeSettings()">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <div class="settings-tabs" role="tablist">
+    <button
+      type="button"
+      class="tab"
+      role="tab"
+      [class.active]="settingsTab === 'perfil'"
+      [attr.aria-selected]="settingsTab === 'perfil'"
+      (click)="settingsTab = 'perfil'"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">person</span> Perfil
+    </button>
+
+    <button
+      type="button"
+      class="tab"
+      role="tab"
+      [class.active]="settingsTab === 'password'"
+      [attr.aria-selected]="settingsTab === 'password'"
+      (click)="settingsTab = 'password'"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">key</span> Contrasena
+    </button>
+
+    <button
+      type="button"
+      class="tab"
+      role="tab"
+      [class.active]="settingsTab === 'soporte'"
+      [attr.aria-selected]="settingsTab === 'soporte'"
+      (click)="settingsTab = 'soporte'"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">support_agent</span> Soporte
+    </button>
+  </div>
+
+  <div class="settings-body" *ngIf="user as u">
+
+    <!-- TAB: Perfil -->
+    <div *ngIf="settingsTab === 'perfil'" class="panel" role="tabpanel">
+      <div class="row"><span class="k">Usuario</span><span class="v">{{ u.usuario || '—' }}</span></div>
+      <div class="row"><span class="k">Correo</span><span class="v">{{ u.correo || '—' }}</span></div>
+      <div class="row"><span class="k">Rol</span><span class="v">{{ u.rol || '—' }}</span></div>
+      <div class="row"><span class="k">Telefono</span><span class="v">{{ u.telefono || '—' }}</span></div>
+    </div>
+
+    <!-- TAB: Contraseña -->
+    <div *ngIf="settingsTab === 'password'" class="panel" role="tabpanel">
+      <div class="hint">
+        Por seguridad no se puede ver tu contrasena actual. Aqui podras cambiarla.
+      </div>
+
+      <div class="field">
+        <label for="pw-current">Contrasena actual</label>
+        <input
+          id="pw-current"
+          type="password"
+          [(ngModel)]="currentPassword"
+          placeholder="Contrasena actual"
+          autocomplete="current-password"
+        />
+      </div>
+
+      <div class="field">
+        <label for="pw-new">Nueva contrasena</label>
+        <input
+          id="pw-new"
+          type="password"
+          [(ngModel)]="newPassword"
+          placeholder="Min 8 caracteres, 1 mayuscula, 1 numero"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="field">
+        <label for="pw-confirm">Confirmar nueva contrasena</label>
+        <input
+          id="pw-confirm"
+          type="password"
+          [(ngModel)]="confirmPassword"
+          placeholder="Repite la nueva contrasena"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button
+        class="btn-save"
+        type="button"
+        [disabled]="passwordSaving"
+        (click)="savePassword()"
+      >
+        {{ passwordSaving ? 'Guardando...' : 'Guardar contrasena' }}
+      </button>
+
+      <div class="pw-msg" *ngIf="passwordMsg" role="alert">{{ passwordMsg }}</div>
+    </div>
+
+    <!-- TAB: Soporte -->
+    <div *ngIf="settingsTab === 'soporte'" class="panel" role="tabpanel">
+      <div class="hint">Necesitas ayuda? Contacta al equipo de soporte.</div>
+
+      <button class="btn-soft" type="button" (click)="contactSupport()">
+        <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+        Enviar correo a soporte
+      </button>
+
+      <button class="btn-soft" type="button" (click)="contactWhatsApp()">
+        <span class="material-symbols-outlined" aria-hidden="true">chat</span>
+        WhatsApp soporte
+      </button>
+    </div>
+
+  </div>
+</div>
